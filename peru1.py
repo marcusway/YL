@@ -217,12 +217,6 @@ def readTask2LogFile(filename, headers=field_names['task2']):
 
     # Specifies the column numbers of some
     # important categories for the log file.
-    TRIAL_NUM = 0
-    TARGET_SIDE = 1
-    TIME_OUT = 2
-    REACTION_TIME = 3
-    TOUCH_POSITION = 4
-    DIST_FROM_CENTER = 5
     PRESSED_SIDE = 6
     GOAL_SIDE = 7
 
@@ -557,7 +551,7 @@ def readTask4LogFile(filename, headers=field_names['task4']):
                 # '32.28865', 'AvgResponseTime', '0.6529274']
                 # which we will distill to ['4', '91.43', '32.28865', '0.6529274']
 
-                task.append([line[0].split()[1], line[2].strip("%"), line[4], line[6]])
+                task.append([cleaned_string(x) for x in [line[0].split()[1], line[2], line[4], line[6]]])
 
                 if not practiceDone:
                     practiceDone = True
@@ -681,7 +675,7 @@ def readTask5LogFile(filename, headers=field_names['task5']):
             else:
                 # Add the current line (as a list) to
                 # the appropriate list of lines
-                currTrialType.append(line[1:])  # Don't include the first (blank) entry
+                currTrialType.append([cleaned_string(x) for x in line[1:]])  # Don't include the first (blank) entry
 
         # The first trial has no previous trial, so the
         # previous trial was not Orange.
@@ -693,7 +687,7 @@ def readTask5LogFile(filename, headers=field_names['task5']):
             # If the dot turned orange in the previous trial:
             # (turned orange is the second value in the list
             # for the each task)
-            if 'True' in task[i - 1][1]:
+            if task[i - 1][1] is True:
             # Set "prev trial orange" to be true.
                 task[i].append(True)
             else:
@@ -784,7 +778,7 @@ def readTask6LogFile(filename, headers=field_names['task6']):
                 # ['1', 'Skipped', '14.82715, '33', '1', '0', '0.4169034',
                 #	'0.759258', '0.4046415', '(5;3;5;3;4;5;4;4)', '697.8182', '0.3613281', '0.4262695', '160.6311']
 
-                task.append([line[0].split()[1]] + [line[i] for i in range(2, len(line), 2)])
+                task.append([cleaned_string(x) for x in [line[0].split()[1]] + [line[i] for i in range(2, len(line), 2)]])
 
         task_dict = [dict(zip(headers, trial)) for trial in task]
         # Convert the practice lines to dictionaries
@@ -920,10 +914,10 @@ def cleaned_string(in_str):
             return None
         elif just_text.isdigit():
             return int(just_text)
-        elif just_text.replace(".", "").isdigit():
-            return float(just_text)
+        elif just_text.replace(".", "").strip("%").isdigit():
+            return float(just_text.strip("%"))
         elif ";" in just_text:
-            return tuple(float(x) for x in just_text.split(";"))
+            return tuple(float(x.strip("()")) for x in just_text.split(";"))
         else:
             return just_text
     else:
