@@ -130,7 +130,7 @@ def readTask1LogFile(filename, headers=field_names['task1']):
                 # the appropriate list of lines
                 currTrialNum = line[1]
                 if currTrialNum != prevTrialNum:
-                    currTrialType.append([int(x) for x in [line[1], line[6], line[7]]])
+                    currTrialType.append([cleaned_string(x) for x in [line[1], line[6], line[7]]])
                     prevTrialNum = currTrialNum
 
         # At this point, practice and task will each be a list of lists, where
@@ -217,8 +217,14 @@ def readTask2LogFile(filename, headers=field_names['task2']):
 
     # Specifies the column numbers of some
     # important categories for the log file.
-    GOAL_SIDE_COLUMN_NUM = 7
-    PRESSED_SIDE_COLUMN_NUM = 6
+    TRIAL_NUM = 0
+    TARGET_SIDE = 1
+    TIME_OUT = 2
+    REACTION_TIME = 3
+    TOUCH_POSITION = 4
+    DIST_FROM_CENTER = 5
+    PRESSED_SIDE = 6
+    GOAL_SIDE = 7
 
     with open(filename, "rU") as logFile:
 
@@ -262,11 +268,11 @@ def readTask2LogFile(filename, headers=field_names['task2']):
             else:
                 # Add the current line (as a list) to
                 # the appropriate list of lines
-                currTrialType.append(line[1:])
+                currTrialType.append([cleaned_string(x) for x in line[1:]])
 
-                # At this point, practice and task will each be a list of lists, where
-                # each sub-list has entries corresponding to the values indicated
-                # by the header row of the log file
+        # At this point, practice and task will each be a list of lists, where
+        # each sub-list has entries corresponding to the values indicated
+        # by the header row of the log file
 
         # Now it seems that we will want to determine switch/non-switch.  True for switch,
         # False for non-switch
@@ -292,22 +298,22 @@ def readTask2LogFile(filename, headers=field_names['task2']):
             # they were supposed to press.
 
             # Determine the goal side.  task[6] is PressedSide and task[7] is Correct
-            if task[i][7] == "1":
-                goal_side = task[i][PRESSED_SIDE_COLUMN_NUM]
-            elif "right" in task[i][PRESSED_SIDE_COLUMN_NUM].lower():
-                goal_side = "Left"
-            elif "left" in task[i][PRESSED_SIDE_COLUMN_NUM].lower():
-                goal_side = "Right"
+            if task[i][7] == 1:
+                goal_side = task[i][PRESSED_SIDE]
+            elif task[i][PRESSED_SIDE] == 'right':
+                goal_side = "left"
+            elif task[i][PRESSED_SIDE] == 'left':
+                goal_side = "right"
             else:  # Side pressed isn't Left or Right
                 goal_side = "???"
 
             # Insert the goal_side according to the output format above
-            task[i].insert(GOAL_SIDE_COLUMN_NUM, goal_side)
+            task[i].insert(GOAL_SIDE, goal_side)
 
             # Determine if it's a switch-side trial, i.e, the side to which the
             # subject was supposed to press changed.
-            prev_goal_side = task[i][GOAL_SIDE_COLUMN_NUM]
-            curr_goal_side = task[i - 1][GOAL_SIDE_COLUMN_NUM]
+            prev_goal_side = task[i][GOAL_SIDE]
+            curr_goal_side = task[i - 1][GOAL_SIDE]
             if prev_goal_side == "???" or curr_goal_side == "???":
                 task[i].append("???")
             elif prev_goal_side != curr_goal_side:
@@ -421,7 +427,7 @@ def readTask3LogFile(filename, headers=field_names['task3']):
             else:
                 # Add the current line (as a list) to
                 # the appropriate list of lines
-                currTrialType.append(line[1:])
+                currTrialType.append([cleaned_string(x) for x in line[1:]])
 
         # At this point, practice and task will each be a list of lists, where
         # each sub-list has entries corresponding to the values indicated
@@ -896,6 +902,35 @@ def parse_file_name(file_name):
     metadata['Time'] = ":".join(split_date[3:])
 
     return metadata
+
+
+def cleaned_string(in_str):
+    """
+    A function to translate the string values
+    read from log files into values that
+    can be manipulated later for data analysis.
+    """
+    if in_str:
+        just_text = in_str.strip().lower()
+        if just_text == 'false':
+            return False
+        elif just_text == 'true':
+            return True
+        elif just_text == ".":
+            return None
+        elif just_text.isdigit():
+            return int(just_text)
+        elif just_text.replace(".", "").isdigit():
+            return float(just_text)
+        elif ";" in just_text:
+            return tuple(float(x) for x in just_text.split(";"))
+        else:
+            return just_text
+    else:
+        return None
+
+
+
 
 
 if __name__ == "__main__":
