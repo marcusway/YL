@@ -127,7 +127,70 @@ def get3(task_dict_list):
     return acc_by_delay, acc_by_load
 
 
-def get4(get_task_dict):
-    
+def get4(task_dict_list):
+
+    """
+    Reads Task 4 dictionary (output from readTask4LogFile)
+    and outputs summary data.  Input looks like:
+
+    [{'AvgDistanceFromCenter': 15.30155,
+      'AvgResponseTime': 0.645187,
+      'Block': 1,
+      'PercentCorrect': 100.0},
+     {'AvgDistanceFromCenter': 22.55198,
+      'AvgResponseTime': 0.5908622,
+      'Block': 2,
+      'PercentCorrect': 100.0},
+     {'AvgDistanceFromCenter': 17.30606,
+      'AvgResponseTime': 0.6249163,
+      'Block': 3,
+      'PercentCorrect': 100.0},
+     {'AvgDistanceFromCenter': 20.74315,
+      'AvgResponseTime': 0.6071847,
+      'Block': 4,
+      'PercentCorrect': 100.0},
+     {'AvgDistanceFromCenter': 21.26595,
+      'AvgResponseTime': 0.5916294,
+      'Block': 5,
+      'PercentCorrect': 100.0}]
+
+    """
+    import numpy as np
+    rand_blocks = (1, 4)
+    rule_blocks = (2, 3, 5)
+
+    random_mean = np.mean([block['AvgResponseTime'] for block in task_dict_list if block['Block'] in rand_blocks])
+    rule_mean = np.mean([block['AvgResponseTime'] for block in task_dict_list if block['Block'] in rule_blocks])
+
+    block4_mean = task_dict_list[3]['AvgResponseTime']
+    block5_mean = task_dict_list[4]['AvgResponseTime']
+
+    return random_mean, rule_mean, block4_mean, block5_mean
+
+
+def get5(task_dict_list):
+    """
+    Reads Task 5 dictionary list (output from readTask5LogFile)
+    and outputs summary data. Input looks like:
+
+    {'AvgDistancePerTarget': 170.9032,
+    'AvgFirstTen': 0.5186402,
+    'AvgLastTen': 0.5875,
+    'AvgLocation': 692.6765,
+    'AvgTargetsPerArea': (5.0, 3.0, 6.0, 3.0, 4.0, 5.0, 5.0, 3.0),
+    'AvgTimePerAction': 0.5415921,
+    'AvgTimePerTarget': 0.5734504,
+    'Duration': 19.51416,
+    'EndCondition': 'completed',
+    'NumBadTouches': 2,
+    'NumGoodTouches': 34,
+    'NumRepeats': 0,
+    'StandardDeviation': 10.20111,
+    'Task': 1}
+    """
+
+    return task_dict_list['NumBadTouches'], task_dict_list['NumRepeats'], task_dict_list['AvgDistancePerTarget']
+
+
 
 
