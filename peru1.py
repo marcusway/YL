@@ -881,6 +881,7 @@ def parse_file_name(file_name):
         metadata['Group'] = sub_components.group(2)  # two digits following PE/PEs
         # Record subject number
         metadata['SubID'] = sub_components.group(3)  # all digits following
+        metadata['Device'] = device
 
         # We expect 6 digits following PE (or PEs).  If there is a different number,
         # warn the user, but don't raise an error.
@@ -956,11 +957,12 @@ if __name__ == "__main__":
 
             for trial in task_data:
                 trial.update(file_metadata)
+
                 #print "Processing file: ", os.path.basename(log_file)
-                write_to_task_file(task_data, out_file,
-                                   ['SubID', 'Group', 'Device', 'Sibling', 'Date', 'Time'] + field_names[task],
-                                   overwrite=new_file)
-                new_file = False
+            write_to_task_file(task_data, out_file,
+                               ['SubID', 'Group', 'Device', 'Sibling', 'Date', 'Time'] + field_names[task],
+                               overwrite=new_file)
+            new_file = False
 
 
 
