@@ -778,7 +778,8 @@ def readTask6LogFile(filename, headers=field_names['task6']):
                 # ['1', 'Skipped', '14.82715, '33', '1', '0', '0.4169034',
                 #	'0.759258', '0.4046415', '(5;3;5;3;4;5;4;4)', '697.8182', '0.3613281', '0.4262695', '160.6311']
 
-                task.append([cleaned_string(x) for x in [line[0].split()[1]] + [line[i] for i in range(2, len(line), 2)]])
+                task.append(
+                    [cleaned_string(x) for x in [line[0].split()[1]] + [line[i] for i in range(2, len(line), 2)]])
 
         task_dict = [dict(zip(headers, trial)) for trial in task]
         # Convert the practice lines to dictionaries
@@ -924,9 +925,6 @@ def cleaned_string(in_str):
         return None
 
 
-
-
-
 if __name__ == "__main__":
 
     import os
@@ -959,7 +957,8 @@ if __name__ == "__main__":
             for trial in task_data:
                 trial.update(file_metadata)
                 #print "Processing file: ", os.path.basename(log_file)
-                write_to_task_file(task_data, out_file, ['SubID', 'Group', 'Device', ] + field_names[task],
+                write_to_task_file(task_data, out_file,
+                                   ['SubID', 'Group', 'Device', 'Sibling', 'Date', 'Time'] + field_names[task],
                                    overwrite=new_file)
                 new_file = False
 

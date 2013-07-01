@@ -73,8 +73,10 @@ def get2(task_dict_list):
 
     # Calculate Average RT and Accuracy for each type of trial
     for trial_type in trial_type_dict:
-        out_dict[trial_type]['Accuracy'] = np.mean([float(x['Correct']) for x in trial_type_dict[trial_type]])
-        out_dict[trial_type]['ReactionTime'] = np.mean([float(x['ReactionTime']) for x in trial_type_dict[trial_type]])
+        out_dict[trial_type]['Accuracy'] = np.mean(
+            [float(x['Correct']) for x in trial_type_dict[trial_type] if x['Correct'] is not None])
+        out_dict[trial_type]['ReactionTime'] = np.mean(
+            [float(x['ReactionTime']) for x in trial_type_dict[trial_type] if x['ReactionTime'] is not None])
 
     return out_dict
 
@@ -122,13 +124,12 @@ def get3(task_dict_list):
     acc_by_delay = {}
     for delay in [.1, 3]:
         acc_by_delay[delay] = np.mean([np.mean([dot[0] for dot in trial if dot[0] is not None])
-                                      for trial in trials if trial[0][1] == delay])
+                                       for trial in trials if trial[0][1] == delay])
 
     return acc_by_delay, acc_by_load
 
 
 def get4(task_dict_list):
-
     """
     Reads Task 4 dictionary (output from readTask4LogFile)
     and outputs summary data.  Input looks like:
@@ -156,6 +157,7 @@ def get4(task_dict_list):
 
     """
     import numpy as np
+
     rand_blocks = (1, 4)
     rule_blocks = (2, 3, 5)
 
@@ -188,8 +190,9 @@ def get5(task_dict_list):
     'StandardDeviation': 10.20111,
     'Task': 1}
     """
+    import numpy as np
 
-    return task_dict_list['NumBadTouches'], task_dict_list['NumRepeats'], task_dict_list['AvgDistancePerTarget']
+    return map(np.mean, ([x['NumBadTouches'] for x in task_dict_list], [x['NumRepeats'] for x in task_dict_list], [x['AvgDistancePerTarget'] for x in task_dict_list]))
 
 
 
