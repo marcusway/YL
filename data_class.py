@@ -7,12 +7,13 @@ class subject:
     and metadata (subject ID, device number, sibling, time) from the output task
     log files.
     """
+
     def __init__(self, ID, group, sibling):
 
-        self.ID      = ID       # Should be a four digit number
-        self.group   = group    # Generally a two-digit number
+        self.ID = ID       # Should be a four digit number
+        self.group = group    # Generally a two-digit number
         self.sibling = sibling  # True/False bool
-        self.data    = {}       # A dictionary to be filled with data_file objects
+        self.data = {}       # A dictionary to be filled with data_file objects
 
     def add_data(self, task, data_object):
 
@@ -23,11 +24,53 @@ class subject:
         :param data_object: An instance of the data_file class
         :return: None
         """
+        if task not in ['task1', 'task2', 'task3', 'task4', 'task5', 'task6']:
+            raise Exception(
+                "Invalid argument for task : %s.  Expected one of 'task1', 'task2', ..., 'task6'" % str(task))
 
-        self.data['Task' + str(task)] = data_object
+        elif isinstance(data_object, data_file):
+            self.data[task] = data_object
+        else:
+            raise Exception("Invalid argument: %s.  \nExpected instance of data_file class")
 
     def write_summary(self, out_file, overwrite=False):
 
+        import csv
+        import os
+
+        # Get summary data for all tasks in one dictionary
+        full_summary = {}
+        for task in self.data:
+            full_summary.update(self.data[task].summary)
+
+        # Get headers in alphabetical order so that data will be written
+        # in task order
+        headers = sorted(full_summary.keys())
+
+        # If the file already exists, we want to append to it
+        # without writing header rows.  However, if overwrite
+        # is true, the whole file will just be overwritten.
+
+        if os.path.isfile(out_file) and not overwrite:
+            with open(out_file, "a") as out:
+                writer = csv.DictWriter(out, headers)
+                out.write(",".join(str(x) for x in [self.ID, self.group, self.sibling]) + ",")
+                writer.writerow(full_summary)  # Should only be one row
+
+        else:  # Open a new file (or overwrite old one) and write to it
+            with open(out_file, "w") as out:
+                writer = csv.DictWriter(out, headers)
+                # Add header for subject ID
+                out.write('SubID,Group,Sibling,')
+                writer.writeheader()
+                out.write(",".join(str(x) for x in [self.ID, self.group, self.sibling]) + ",")
+                writer.writerow(full_summary)
+
+    def dump_trial_by_trial(self, task, out_file, overwrite=False):
+        """
+        This function takes a list of dictionaries
+        and writes them to a .csv file.
+        """
         import csv
         import os
 
@@ -36,16 +79,25 @@ class subject:
         # is true, the whole file will just be overwritten.
         if os.path.isfile(out_file) and not overwrite:
             with open(out_file, "a") as out:
-                writer = csv.DictWriter(out, self.summary.keys())
-                writer.writerows(self.summary)
+                writer = csv.DictWriter(out, self.data[task].field_names)
+                # Add ID, time, group, and sibling as first columns
+
+                for trial in self.data[task].trial_by_trial:
+                    out.write(
+                        ",".join(str(x) for x in [self.ID, self.group, self.sibling, self.data[task].device,
+                                                  self.data[task].time]) + ",")
+                    writer.writerow(trial)
 
         else:  # Open a new file (or overwrite old one) and write to it
             with open(out_file, "w") as out:
-                writer = csv.DictWriter(out, self.summary.keys())
-                # Add header for subject ID
-                out.write()
+                writer = csv.DictWriter(out, self.data[task].field_names)
+                out.write('SubID,Group,Sibling,Device,Time,')
                 writer.writeheader()
-                writer.writerows(self.summary)
+                for row in self.data[task].trial_by_trial:
+                    out.write(
+                        ",".join(str(x) for x in [self.ID, self.group, self.sibling, self.data[task].device,
+                                                  self.data[task].time]) + ",")
+                    writer.writerow(row)
 
 
 class data_file:
@@ -201,28 +253,19 @@ class data_file:
         elif self.task == 'task6':
             self.summary = master_sheet.get6(self.trial_by_trial)
 
-    def dump_trial_by_trial(self, out_file, overwrite=False):
-        """
-        This function takes a list of dictionaries
-        and writes them to a .csv file.
-        """
-        import csv
-        import os
 
-        # If the file already exists, we want to append to it
-        # without writing header rows.  However, if overwrite
-        # is true, the whole file will just be overwritten.
-        if os.path.isfile(out_file) and not overwrite:
-            with open(out_file, "a") as out:
-                writer = csv.DictWriter(out, self.field_names)
-                writer.writerows(self.trial_by_trial)
+if __name__ == "__main__":
+    import os
 
-        else:  # Open a new file (or overwrite old one) and write to it
-            with open(out_file, "w") as out:
-                writer = csv.DictWriter(out, self.field_names)
-                writer.writeheader()
-                writer.writerows(self.trial_by_trial)
+    subFiles = sorted(['log_files/' + f for f in os.listdir('log_files') if 'PE211020' in f])
+    b = None
+    for i, f in enumerate(subFiles):
+        a = data_file(f)
+        if not b:
+            b = subject(a.ID, a.group, a.sibling)
+        b.add_data("task"+str(i+1), a)
+        b.dump_trial_by_trial("task" + str(i+1), 'NEW' + str(i+1) + '.csv', overwrite=True)
+    b.write_summary("New7.csv")
 
-
-
-
+    with open('NEW7.csv', "r") as f:
+        print f.read()
