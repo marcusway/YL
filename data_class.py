@@ -26,6 +26,27 @@ class subject:
 
         self.data['Task' + str(task)] = data_object
 
+    def write_summary(self, out_file, overwrite=False):
+
+        import csv
+        import os
+
+        # If the file already exists, we want to append to it
+        # without writing header rows.  However, if overwrite
+        # is true, the whole file will just be overwritten.
+        if os.path.isfile(out_file) and not overwrite:
+            with open(out_file, "a") as out:
+                writer = csv.DictWriter(out, self.summary.keys())
+                writer.writerows(self.summary)
+
+        else:  # Open a new file (or overwrite old one) and write to it
+            with open(out_file, "w") as out:
+                writer = csv.DictWriter(out, self.summary.keys())
+                # Add header for subject ID
+                out.write()
+                writer.writeheader()
+                writer.writerows(self.summary)
+
 
 class data_file:
     """
@@ -37,7 +58,9 @@ class data_file:
 
         self.file_name = file_name
         self.parse_file_name(file_name)
-        self.set_field_names(self.task)
+        self.set_field_names()
+        self.read_file()
+        self.summarize()
 
     def parse_file_name(self, file_name):
 
@@ -149,42 +172,57 @@ class data_file:
         import peru1
 
         if self.task == 'task1':
-            self.practice, self.trial_by_trial = peru1.readTask1LogFile(self.file_name)
+            self.practice, self.trial_by_trial = peru1.readTask1LogFile(self.file_name, headers=self.field_names)
         elif self.task == 'task2':
-            self.practice, self.trial_by_trial = peru1.readTask2LogFile(self.file_name)
+            self.practice, self.trial_by_trial = peru1.readTask2LogFile(self.file_name, headers=self.field_names)
         elif self.task == 'task3':
-            self.practice, self.trial_by_trial = peru1.readTask3LogFile(self.file_name)
+            self.practice, self.trial_by_trial = peru1.readTask3LogFile(self.file_name, headers=self.field_names)
         elif self.task == 'task4':
-            self.practice, self.trial_by_trial = peru1.readTask4LogFile(self.file_name)
+            self.practice, self.trial_by_trial = peru1.readTask4LogFile(self.file_name, headers=self.field_names)
         elif self.task == 'task5':
-            self.practice, self.trial_by_trial = peru1.readTask6LogFile(self.file_name)
+            self.practice, self.trial_by_trial = peru1.readTask6LogFile(self.file_name, headers=self.field_names)
         elif self.task == 'task6':
-            self.practice, self.trial_by_trial = peru1.readTask1LogFile(self.file_name)
+            self.practice, self.trial_by_trial = peru1.readTask1LogFile(self.file_name, headers=self.field_names)
+
+    def summarize(self):
+
+        import master_sheet
+
+        if self.task == 'task1':
+            self.summary = master_sheet.get1(self.trial_by_trial)
+        elif self.task == 'task2':
+            self.summary = master_sheet.better_get2(self.trial_by_trial)
+        elif self.task == 'task3':
+            self.summary = master_sheet.get3(self.trial_by_trial)
+        elif self.task == 'task4':
+            self.summary = master_sheet.get4(self.trial_by_trial)
+        elif self.task == 'task5':
+            self.summary = master_sheet.get5(self.trial_by_trial)
+        elif self.task == 'task6':
+            self.summary = master_sheet.get6(self.trial_by_trial)
+
+    def dump_trial_by_trial(self, out_file, overwrite=False):
+        """
+        This function takes a list of dictionaries
+        and writes them to a .csv file.
+        """
+        import csv
+        import os
+
+        # If the file already exists, we want to append to it
+        # without writing header rows.  However, if overwrite
+        # is true, the whole file will just be overwritten.
+        if os.path.isfile(out_file) and not overwrite:
+            with open(out_file, "a") as out:
+                writer = csv.DictWriter(out, self.field_names)
+                writer.writerows(self.trial_by_trial)
+
+        else:  # Open a new file (or overwrite old one) and write to it
+            with open(out_file, "w") as out:
+                writer = csv.DictWriter(out, self.field_names)
+                writer.writeheader()
+                writer.writerows(self.trial_by_trial)
 
 
 
 
-def cleaned_string(in_str):
-    """
-    A function to translate the string values
-    read from log files into values that
-    can be manipulated later for data analysis.
-    """
-    if in_str:
-        just_text = in_str.strip().lower()
-        if just_text == 'false':
-            return False
-        elif just_text == 'true':
-            return True
-        elif just_text == ".":
-            return None
-        elif just_text.isdigit():
-            return int(just_text)
-        elif just_text.replace(".", "").strip("%").isdigit():
-            return float(just_text.strip("%"))
-        elif ";" in just_text:
-            return tuple(float(x.strip("()")) for x in just_text.split(";"))
-        else:
-            return just_text
-    else:
-        return None

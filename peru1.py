@@ -855,7 +855,7 @@ def parse_file_name(file_name):
 
     # Split the file name into components. If filename = 'PE211005_IIN028_task1_5-15-2013-16-13-32',
     # name components should be = ['PE211005', 'IIN028', 'task1', '5-15-2013-16-13-32']
-    subject, device, task_number, date_and_time = name.split("_")
+    subject, device, metadata['Task'], date_and_time = name.split("_")
 
     # Further split the subject string, which should be something like 'PE211005'
     sub_components = re.search(r'(PEs?)(\d\d)(\d+)', subject, re.IGNORECASE)
