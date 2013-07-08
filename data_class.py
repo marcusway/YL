@@ -251,7 +251,7 @@ class data_file:
         elif self.task == 'task5':
             self.summary = master_sheet.get5(self.trial_by_trial)
         elif self.task == 'task6':
-            self.summary = master_sheet.get6(self.trial_by_trial)
+            self.summary = master_sheet.get1(self.trial_by_trial)
 
 
 if __name__ == "__main__":
