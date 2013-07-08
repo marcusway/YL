@@ -122,11 +122,12 @@ def get3(task_dict_list):
         acc_by_load[i] = np.mean([np.mean([dot[0] for dot in trial if dot[0] is not None])
                                   for trial in trials if len(trial) == i])
     acc_by_delay = {}
-    for delay in [.1, 3]:
+    for delay in [0.1, 3]:
         acc_by_delay[delay] = np.mean([np.mean([dot[0] for dot in trial if dot[0] is not None])
                                        for trial in trials if trial[0][1] == delay])
 
-    return acc_by_delay, acc_by_load
+    return {'T3_Load1Distance': acc_by_load[1], 'T3_Load2Distance': acc_by_load[2], 'T3_Load3Distance': acc_by_load[3],
+            'T3_Delay0.1Distance': acc_by_delay[0.1], 'T3_Delay3Distance': acc_by_delay[3]}
 
 
 def get4(task_dict_list):
@@ -167,7 +168,8 @@ def get4(task_dict_list):
     block4_mean = task_dict_list[3]['AvgResponseTime']
     block5_mean = task_dict_list[4]['AvgResponseTime']
 
-    return random_mean, rule_mean, block4_mean, block5_mean
+    return {'T4_RandomAccuracy': random_mean, 'T4_RuleAccuracy': rule_mean, 'T4_Block4Accuracy': block4_mean,
+            'T4_Block5Accuracy': block5_mean}
 
 
 def get5(task_dict_list):
@@ -192,7 +194,8 @@ def get5(task_dict_list):
     """
     import numpy as np
 
-    return map(np.mean, ([x['NumBadTouches'] for x in task_dict_list], [x['NumRepeats'] for x in task_dict_list], [x['AvgDistancePerTarget'] for x in task_dict_list]))
+    values = map(np.mean, ([x['NumBadTouches'] for x in task_dict_list], [x['NumRepeats'] for x in task_dict_list], [x['AvgDistancePerTarget'] for x in task_dict_list]))
+    return zip(['T5_NumBadTouches', 'T5_NumRepeats', 'T5_AvgDistancePerTarget'], values)
 
 
 def better_get2(task_dict_list):
@@ -250,3 +253,30 @@ def better_get2(task_dict_list):
             'T2_SameAccuracy': same_accuracy, 'T2_OppositeAccuracy': opposite_accuracy, 'T2_SwitchRuleRT':
             switch_rule_rt, 'T2_NonSwitchRuleRT': non_switch_rule_rt, 'T2_SwitchSideRT': switch_side_rt,
             'T2_NonSwitchSideRT': non_switch_side_rt, 'T2_SameRT': same_rt, 'T2_OppositeRT': opposite_rt}
+
+
+def get6(task_dict_list):
+    """
+    :param task_dict_list: list of dictionaries output
+                           by readTask1LogFile function
+
+    """
+    import numpy as np
+
+    # Calculate the average number of bad touches per trial
+    bad_touches = [x['NumBadTouches'] for x in task_dict_list]
+
+    # We should always have 12 trials, and be looking at the first
+    # six trials versus the last six trials, but I've added this
+    # midpoint variable in case for some reason there's a different
+    # number of trials.
+    mid_point = len(bad_touches) / 2
+
+    # Again, since there should be equal number of trials contributing
+    # to avg_first and average_last, avg_total could be computed by
+    # just doing np.mean([avg_first, avg_last]), but it's safer this way
+    avg_total = np.mean(bad_touches)
+    avg_first = np.mean(bad_touches[:mid_point])
+    avg_last = np.mean(bad_touches[mid_point:])
+
+    return {'T6_BadTouches_AllTrials': avg_total, 'T6_BadTouches_First': avg_first, 'T6_BadTouchesLast:': avg_last}

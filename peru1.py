@@ -22,8 +22,6 @@
 # 	1	6	 3;11;10;5	3	 229;608	2	1
 # 	1	6	 3;11;10;5	10	 839;580	2	1
 
-
-
 # where the first line contains summary statistics, then there is a block for practice data
 # followed by a block containing the data from the actual task. We want to take both the 
 # task and practice data and append them to corresponding sheets in an excel document 
@@ -886,8 +884,8 @@ def parse_file_name(file_name):
         # We expect 6 digits following PE (or PEs).  If there is a different number,
         # warn the user, but don't raise an error.
         if len(metadata['SubID']) != 4:
-            warnings.warn("File name of unexpected format: %s  Expected a 2-digit group number and "
-                          "4-digit ID number.  Using SubID = %s" % (file_name, metadata['SubID']))
+            warnings.warn("File name of unexpected format: %s  \nExpected a 2-digit group number and "
+                          "4-digit ID number.  \nUsing SubID = %s" % (file_name, metadata['SubID']))
 
     else:  # The subject info isn't divided as expected
         raise Exception("File name of unexpected format: %s" % file_name)
@@ -929,16 +927,18 @@ def cleaned_string(in_str):
 if __name__ == "__main__":
 
     import os
+    import master_sheet
 
     fileList = ['./log_files/' + logFile for logFile in os.listdir('./log_files') if 'pe' in logFile.lower()]
+    master_file = "MASTER_SHEET_OF_GOD.csv"
 
-    for task, task_function, out_file in [('task1', readTask1LogFile, 'TEST1.csv'),
-                                          ('task2', readTask2LogFile, 'TEST2.csv'),
-                                          ('task3', readTask3LogFile, 'TEST3.csv'),
-                                          ('task4', readTask4LogFile, 'TEST4.csv'),
-                                          ('task5', readTask5LogFile, 'TEST5.csv'),
-                                          ('task6', readTask6LogFile, 'TEST6.csv'),
-                                          ('task7', readTask1LogFile, 'TEST7.csv')]:
+    for task, task_function, get_function, out_file in [('task1', readTask1LogFile, master_sheet.get1, 'TEST1.csv'),
+                                                        ('task2', readTask2LogFile, master_sheet.better_get2,
+                                                         'TEST2.csv'),
+                                                        ('task3', readTask3LogFile, master_sheet.get3, 'TEST3.csv'),
+                                                        ('task4', readTask4LogFile, master_sheet.get4, 'TEST4.csv'),
+                                                        ('task6', readTask6LogFile, master_sheet.get5, 'TEST6.csv'),
+                                                        ('task7', readTask1LogFile, master_sheet.get6, 'TEST7.csv')]:
         new_file = True
 
         for log_file in [f for f in fileList if task in f]:
@@ -962,6 +962,10 @@ if __name__ == "__main__":
             write_to_task_file(task_data, out_file,
                                ['SubID', 'Group', 'Device', 'Sibling', 'Date', 'Time'] + field_names[task],
                                overwrite=new_file)
+            master_data = get_function(task_data)
+            master_data.update(file_metadata)
+            write_to_task_file(master_data, master_file,
+                               ['SubID', 'Group', 'Sibling', 'Device'] + sorted(master_data.keys()))
             new_file = False
 
 
