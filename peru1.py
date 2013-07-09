@@ -72,7 +72,7 @@ field_names = {'task1': ["TrialNum", "NumBadTouches", "Score", "Score-incorrect 
 }
 
 
-def readTask1LogFile(filename, headers=field_names['task1']):
+def readTask1LogFile(filename, task_number, headers=field_names['task1']):
     """
     Takes as an argument the path to
     a log file of the format specified above and
@@ -98,7 +98,10 @@ def readTask1LogFile(filename, headers=field_names['task1']):
         # UNUSED LINES
         logReader.next()  # Returns stimulus locations. Unused.
         logReader.next()  # Returns a summary line, which is also unused.
-        logReader.next()  # Contains practice headers
+
+        # The subject only has practice trials for task1, not for task6
+        if task_number == 1:
+            logReader.next()  # Contains practice headers
 
         # There are a variable number of practice trials.
         # Iterate over the lines of the file until we hit the line with
