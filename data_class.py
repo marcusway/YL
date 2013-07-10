@@ -1,5 +1,5 @@
 # An attempt to use some OOP to solve this problem.
-
+import exception_classes as e
 
 class subject:
     """
@@ -31,8 +31,7 @@ class subject:
         :return: None
         """
         if task not in ['task1', 'task2', 'task3', 'task4', 'task5', 'task6']:
-            raise Exception(
-                "Invalid argument for task : %s.  Expected one of 'task1', 'task2', ..., 'task6'" % str(task))
+            raise e.TaskNameError(task)
 
         elif isinstance(data_object, data_file):
             self.data[task] = data_object
@@ -163,7 +162,7 @@ class data_file:
 
         # Only accept csv files.
         if extension != ".csv":
-            raise Exception("Invalid file format for file: %s\n Not a .csv file" % file_name)
+            raise e.BadFileNameError(file_name)
 
         # Split the file name into components. If filename = 'PE211005_IIN028_task1_5-15-2013-16-13-32',
         # name components should be = ['PE211005', 'IIN028', 'task1', '5-15-2013-16-13-32']
@@ -200,12 +199,12 @@ class data_file:
                               "4-digit ID number.  \nUsing SubID = %s" % (file_name, self.ID))
 
         else:  # The subject info isn't divided as expected
-            raise Exception("File name of unexpected format: %s" % file_name)
+            raise e.BadFileNameError(file_name)
 
         # Split the date and time
         split_date = date_and_time.split("-")
         if len(split_date) != 6:
-            raise Exception("File name of unexpected format: %s" % file_name)
+            raise e.BadFileNameError(file_name)
         else:
             self.date = "/".join(split_date[:3])
             self.time = ":".join(split_date[3:])

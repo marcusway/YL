@@ -1,7 +1,13 @@
-__author__ = 'margaretsheridan'
+"""
+A script to iterate over log files, add them to database, and
+then write the summary data to a file.
+"""
+
 import os
-import data_class as dat
 import cPickle as pickle
+
+import data_class as dat
+
 subjects = {}
 bad_subs  = set()
 # Iterate over all the files

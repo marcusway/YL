@@ -1,3 +1,5 @@
+import exception_classes as e
+
 def read_file(task_number, logFile, task_headers, practice_headers):
 
     import csv
@@ -5,7 +7,7 @@ def read_file(task_number, logFile, task_headers, practice_headers):
     logReader = csv.reader(logFile)
 
     if task_number not in ['task1', 'task2', 'task3', 'task4', 'task5', 'task6']:
-        raise Exception("Invalid task number")
+        raise e.TaskNameError(task_number)
 
     if task_number in ['task3', 'task5', 'task6', 'task4']:
         skip_lines(logReader, 2)
@@ -66,7 +68,7 @@ def parse_file_name(file_name):
 
     # Only accept csv files.
     if extension != ".csv":
-        raise Exception("Invalid file format for file: %s\n Not a .csv file" % file_name)
+        raise e.BadFileNameError(file_name)
 
     # Split the file name into components. If filename = 'PE211005_IIN028_task1_5-15-2013-16-13-32',
     # name components should be = ['PE211005', 'IIN028', 'task1', '5-15-2013-16-13-32']
@@ -80,7 +82,7 @@ def parse_file_name(file_name):
     # this assumes that the group number is always two digits, but
     # allows for the subject number to vary in length.
     if not sub_components:
-        raise Exception("File name of unexpected format: %s" % file_name)
+        raise e.BadFileNameError(file_name)
 
     if len(sub_components.groups()) == 3:
 
@@ -103,7 +105,7 @@ def parse_file_name(file_name):
                           "4-digit ID number.\nUsing SubID = %s" % (file_name, metadata['SubID']))
 
     else:  # The subject info isn't divided as expected
-        raise Exception("File name of unexpected format: %s" % file_name)
+        raise e.BadFileNameError(file_name)
 
     # Split the date and time
     split_date = date_and_time.split("-")
@@ -169,7 +171,7 @@ def grab_raw_data(logReader, practice, task):
         # If we get a row with something other
         # than "Task" in the first column, report an error.
         elif line[0] and not line[0].isspace():
-            raise Exception("Error: line of unexpected format")
+            raise e.BadLineError
 
         # Add the current row to its appropriate list
         else:
@@ -259,7 +261,7 @@ def task1_get_data(logReader, practice, task):
         # If we get a row with something other
         # than "Task" in the first column, report an error.
         elif line[0] and not line[0].isspace():
-            raise Exception("Error: line of unexpected format")
+            raise e.BadLineError(line)
 
         # Add the current row to its appropriate list
         else:
@@ -293,8 +295,7 @@ def task4_get_data(logReader, practice, task):
                 practiceDone = True
 
         elif line[0] and not line[0].isspace():
-            raise Exception("Error: line of unexpected format in file. Expected "
-                            "blank first column.")
+            raise e.BadLineError
 
         elif not practiceDone:
             practice.append(line[1:])
