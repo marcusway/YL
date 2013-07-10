@@ -122,12 +122,16 @@ def get3(task_dict_list):
     # Calculate average accuracy by load, determined by the length of the list
     acc_by_load = {}
     for i in range(1, 4):
-        acc_by_load[i] = np.mean([np.mean([dot[0] for dot in trial if dot[0] is not None])
-                                  for trial in trials if len(trial) == i])
+        load_means = [np.mean([dot[0] for dot in trial if dot[0]])
+                      for trial in trials if len(trial) == i]
+        acc_by_load[i] = np.mean([x for x in load_means if not np.isnan(x)])
+
     acc_by_delay = {}
     for delay in [0.1, 3]:
-        acc_by_delay[delay] = np.mean([np.mean([dot[0] for dot in trial if dot[0] is not None])
-                                       for trial in trials if trial[0][1] == delay])
+        delay_means = [np.mean([dot[0] for dot in trial if dot[0] is not None])
+                       for trial in trials if trial[0][1] == delay]
+
+        acc_by_delay[delay] = np.mean([x for x in delay_means if not np.isnan(x)])
 
     return {'T3_Load1Distance': acc_by_load[1], 'T3_Load2Distance': acc_by_load[2], 'T3_Load3Distance': acc_by_load[3],
             'T3_Delay0.1Distance': acc_by_delay[0.1], 'T3_Delay3Distance': acc_by_delay[3]}

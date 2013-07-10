@@ -5,7 +5,7 @@ import cPickle as pickle
 subjects = {}
 bad_subs  = set()
 # Iterate over all the files
-for log_file in [os.path.join('YL_DATA_PERU',f) for f in os.listdir('YL_DATA_PERU')]:
+for log_file in sorted([os.path.join('YL_DATA_PERU',f) for f in os.listdir('YL_DATA_PERU')]):
 
     # Check if the current subject number is in our dictionary
     with open(log_file,"rU") as in_file:
