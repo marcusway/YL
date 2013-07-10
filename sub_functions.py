@@ -1,5 +1,6 @@
 import exception_classes as e
 
+
 def read_file(task_number, logFile, task_headers, practice_headers):
 
     import csv
@@ -72,7 +73,10 @@ def parse_file_name(file_name):
 
     # Split the file name into components. If filename = 'PE211005_IIN028_task1_5-15-2013-16-13-32',
     # name components should be = ['PE211005', 'IIN028', 'task1', '5-15-2013-16-13-32']
-    subject, device, metadata['Task'], date_and_time = name.split("_")
+    try:
+        subject, device, metadata['Task'], date_and_time = name.split("_")
+    except ValueError:
+        raise e.BadFileNameError(file_name)
 
     # Further split the subject string, which should be something like 'PE211005'
     sub_components = re.search(r'(PEs?)(\d\d)(\d+)', subject, re.IGNORECASE)
@@ -109,6 +113,8 @@ def parse_file_name(file_name):
 
     # Split the date and time
     split_date = date_and_time.split("-")
+    if len(split_date) != 6:
+        raise e.BadFileNameError(file_name)
     metadata['Date'] = "/".join(split_date[:3])
     metadata['Time'] = ":".join(split_date[3:])
 
@@ -230,6 +236,17 @@ def task_2_determine_switch(task):
 
 
 def task3_determine_dot_order(task):
+
+    """
+    Given trial data from task 3 (in the list of lists form generated in
+    the function read_file(), task3_determine_dot_order appends a value
+    indicating the order in which the dots were pressed (or at least
+    in which they appear on the log file)
+
+    :param task: a list of lists, where each nested list corresponds to a dot
+    :return None:  the input is modified in place
+    """
+
     task[0].append(1)
 
     # Iterate over the remaining lines of the file
@@ -238,13 +255,19 @@ def task3_determine_dot_order(task):
         # If the current dot was presented as a part
         # of the same trial as the previous one
         if task[i][0] == task[i - 1][0]:
-        # The trial number is one more than the last one
+            # Increment the trial number
             task[i].append(task[i - 1][-1] + 1)
         else:  # It's a new trial, so reset the dot number to 1.
             task[i].append(1)
 
 
 def task1_get_data(logReader, practice, task):
+    """
+    :param logReader:
+    :param practice:
+    :param task:
+    :return: None: task is modified in place
+    """
     currTrialType = practice
     prevTrialNum = None
 

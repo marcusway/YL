@@ -36,7 +36,7 @@ class subject:
         elif isinstance(data_object, data_file):
             self.data[task] = data_object
         else:
-            raise Exception("Invalid argument: %s.  \nExpected instance of data_file class", repr(data_object))
+            raise TypeError(data_object)
 
     def write_summary(self, out_file, overwrite=False):
 
@@ -176,7 +176,7 @@ class data_file:
         # this assumes that the group number is always two digits, but
         # allows for the subject number to vary in length.
         if not sub_components:
-            raise Exception("File name of unexpected format: %s" % file_name)
+            raise e.BadFileNameError(file_name)
 
         if len(sub_components.groups()) == 3:
 
