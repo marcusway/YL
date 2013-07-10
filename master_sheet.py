@@ -74,9 +74,9 @@ def get2(task_dict_list):
     # Calculate Average RT and Accuracy for each type of trial
     for trial_type in trial_type_dict:
         out_dict[trial_type]['Accuracy'] = np.mean(
-            [float(x['Correct']) for x in trial_type_dict[trial_type] if x['Correct'] is not None])
+            [int(x['Correct']) for x in trial_type_dict[trial_type] if x['Correct'] is not None])
         out_dict[trial_type]['ReactionTime'] = np.mean(
-            [float(x['ReactionTime']) for x in trial_type_dict[trial_type] if x['ReactionTime'] is not None])
+            [int(x['ReactionTime']) for x in trial_type_dict[trial_type] if x['ReactionTime'] is not None])
 
     return out_dict
 
@@ -106,6 +106,9 @@ def get3(task_dict_list):
     trials = []
     trial_num = None
 
+    # Builds a list within which each trial is represented by a list,
+    # within which each dot has a (distance, delay tuple)
+    # TODO: This could be implemented more efficiently either as a dictionary or a different list structure
     for trial in task_dict_list:
         if trial['TrialNum'] == trial_num:
             trials[-1].append((trial['DistanceFromCenter'], trial['Delay']))
@@ -168,8 +171,8 @@ def get4(task_dict_list):
     block4_mean = task_dict_list[3]['AvgResponseTime']
     block5_mean = task_dict_list[4]['AvgResponseTime']
 
-    return {'T4_RandomAccuracy': random_mean, 'T4_RuleAccuracy': rule_mean, 'T4_Block4Accuracy': block4_mean,
-            'T4_Block5Accuracy': block5_mean}
+    return {'T4_RandomRT': random_mean, 'T4_RuleRT': rule_mean, 'T4_Block4RT': block4_mean,
+            'T4_Block5RT': block5_mean}
 
 
 def get5(task_dict_list):

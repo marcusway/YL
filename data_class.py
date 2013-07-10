@@ -15,6 +15,12 @@ class subject:
         self.sibling = sibling  # True/False bool
         self.data = {}       # A dictionary to be filled with data_file objects
 
+    def __str__(self):
+        """
+        String representation of the object
+        """
+        return '<Subject Number: %s Group: %s Sibling: %s>' % (self.ID, self.group, str(self.sibling))
+
     def add_data(self, task, data_object):
 
         """
@@ -31,7 +37,7 @@ class subject:
         elif isinstance(data_object, data_file):
             self.data[task] = data_object
         else:
-            raise Exception("Invalid argument: %s.  \nExpected instance of data_file class")
+            raise Exception("Invalid argument: %s.  \nExpected instance of data_file class", repr(data_object))
 
     def write_summary(self, out_file, overwrite=False):
 
@@ -39,9 +45,7 @@ class subject:
         import os
 
         # Get summary data for all tasks in one dictionary
-        full_summary = {}
-        for task in self.data:
-            full_summary.update(self.data[task].summary)
+        full_summary = self.summarize_data()
 
         # Get headers in alphabetical order so that data will be written
         # in task order
@@ -79,7 +83,7 @@ class subject:
         # is true, the whole file will just be overwritten.
         if os.path.isfile(out_file) and not overwrite:
             with open(out_file, "a") as out:
-                writer = csv.DictWriter(out, self.data[task].field_names)
+                writer = csv.DictWriter(out, self.data[task].task_headers)
                 # Add ID, time, group, and sibling as first columns
 
                 for trial in self.data[task].trial_by_trial:
@@ -90,7 +94,7 @@ class subject:
 
         else:  # Open a new file (or overwrite old one) and write to it
             with open(out_file, "w") as out:
-                writer = csv.DictWriter(out, self.data[task].field_names)
+                writer = csv.DictWriter(out, self.data[task].task_headers)
                 out.write('SubID,Group,Sibling,Device,Time,')
                 writer.writeheader()
                 for row in self.data[task].trial_by_trial:
@@ -99,6 +103,18 @@ class subject:
                                                   self.data[task].time]) + ",")
                     writer.writerow(row)
 
+    def summarize_data(self):
+        """
+        Returns a dictionary with summary data from all tasks
+        """
+        # Get summary data for all tasks in one dictionary
+        full_summary = {}
+        for task in self.data:
+            full_summary.update(self.data[task].summary)
+
+        return full_summary
+
+
 
 class data_file:
     """
@@ -106,13 +122,18 @@ class data_file:
     a log file
     """
 
-    def __init__(self, file_name):
+    def __init__(self, log_file):
 
-        self.file_name = file_name
-        self.parse_file_name(file_name)
-        self.set_field_names()
+        import os
+
+        self.log_file = log_file
+        self.filename = os.path.basename(log_file.name)
+        self.parse_file_name(self.filename)
+        self.set_task_headers()
+        self.set_practice_headers()
         self.read_file()
         self.summarize()
+        del self.log_file  # Just because you can't pickle files
 
     def parse_file_name(self, file_name):
 
@@ -183,10 +204,13 @@ class data_file:
 
         # Split the date and time
         split_date = date_and_time.split("-")
-        self.date = "/".join(split_date[:3])
-        self.time = ":".join(split_date[3:])
+        if len(split_date) != 6:
+            raise Exception("File name of unexpected format: %s" % file_name)
+        else:
+            self.date = "/".join(split_date[:3])
+            self.time = ":".join(split_date[3:])
 
-    def set_field_names(self):
+    def set_task_headers(self):
 
         """
         Determines which field names to use when reading from the log file into
@@ -194,47 +218,61 @@ class data_file:
         """
 
         if self.task == 'task1':
-            self.field_names = ["TrialNum", "NumBadTouches", "Score", "Score-incorrect only"]
+            self.task_headers = ["TrialNum", "NumBadTouches", "Score", "Score-incorrect only"]
 
         elif self.task == 'task2':
-            self.field_names = ['TrialNum', 'TargetSide', 'TimeOut', 'ReactionTime', 'TouchPosition',
-                                'DistanceFromCenter', 'PressedSide', 'GoalSide', 'Correct', 'SwitchRule',
-                                'SwitchSide']
+            self.task_headers = ['TrialNum', 'TargetSide', 'TimeOut', 'ReactionTime', 'TouchPosition',
+                                 'DistanceFromCenter', 'PressedSide', 'GoalSide', 'Correct', 'SwitchRule',
+                                 'SwitchSide']
 
         elif self.task == 'task3':
-            self.field_names = ['TrialNum', 'NumDots', 'ShownDots', 'Delay', 'TimeOut', 'EarlyResponse',
-                                'DotPressed', 'ReactionTime', 'TouchPosition', 'DistanceFromCenter', 'Rank']
+            self.task_headers = ['TrialNum', 'NumDots', 'ShownDots', 'Delay', 'TimeOut', 'EarlyResponse',
+                                 'DotPressed', 'ReactionTime', 'TouchPosition', 'DistanceFromCenter', 'Rank']
 
         elif self.task == 'task4':
-            self.field_names = ['Block', 'PercentCorrect', 'AvgDistanceFromCenter', 'AvgResponseTime']
+            self.task_headers = ['Block', 'PercentCorrect', 'AvgDistanceFromCenter', 'AvgResponseTime']
 
         elif self.task == 'task5':
-            self.field_names = ['Task', 'EndCondition', 'Duration', 'NumGoodTouches', 'NumBadTouches',
-                                'NumRepeats', 'AvgTimePerTarget', 'StandardDeviation', 'AvgTimePerAction',
-                                'AvgTargetsPerArea', 'AvgLocation', 'AvgFirstTen', 'AvgLastTen', 'AvgDistancePerTarget']
+            self.task_headers = ['Task', 'EndCondition', 'Duration', 'NumGoodTouches', 'NumBadTouches',
+                                 'NumRepeats', 'AvgTimePerTarget', 'StandardDeviation', 'AvgTimePerAction',
+                                 'AvgTargetsPerArea', 'AvgLocation', 'AvgFirstTen', 'AvgLastTen',
+                                 'AvgDistancePerTarget']
 
         elif self.task == 'task6':
-            self.field_names = ["TrialNum", "NumBadTouches", "Score", "Score-incorrect only"]
+            self.task_headers = ["TrialNum", "NumBadTouches", "Score", "Score-incorrect only"]
+
+    def set_practice_headers(self):
+
+        if self.task == 'task1':
+            self.practice_headers = ["TrialNum", "NumBadTouches", "Score"]
+
+        elif self.task == 'task2':
+            self.practice_headers = ['TrialNum', 'TargetSide', 'TimeOut', 'ReactionTime', 'TouchPosition',
+                                     'DistanceFromCenter', 'PressedSide', 'GoalSide', 'Correct']
+
+        elif self.task == 'task3':
+            self.practice_headers = ['TrialNum', 'NumDots', 'ShownDots', 'Delay', 'TimeOut', 'EarlyResponse',
+                                     'DotPressed', 'ReactionTime', 'TouchPosition', 'DistanceFromCenter']
+
+        elif self.task == 'task4':
+            self.practice_headers = ['TrialNum', 'Correct', 'ResponseTime', 'TouchPosition', 'DistanceFromCenter']
+
+        elif self.task == 'task5':
+            self.practice_headers = ['EndCondition', 'Duration', 'NumGoodTouches', 'NumBadTouches',
+                                     'NumRepeats', 'AvgTimePerTarget', 'StandardDeviation', 'AvgTimePerAction',
+                                     'AvgTargetsPerArea', 'AvgLocation', 'AvgFirstTen', 'AvgLastTen',
+                                     'AvgDistancePerTarget']
+
+        elif self.task == 'task6':
+            self.practice_headers = ["TrialNum", "NumBadTouches", "Score"]
 
     def read_file(self):
         """
-        Call the readTaskData function from peru1 with the corresponding task number.
+        Call the read_log_file function
         """
-
-        import peru1
-
-        if self.task == 'task1':
-            self.practice, self.trial_by_trial = peru1.readTask1LogFile(self.file_name, headers=self.field_names)
-        elif self.task == 'task2':
-            self.practice, self.trial_by_trial = peru1.readTask2LogFile(self.file_name, headers=self.field_names)
-        elif self.task == 'task3':
-            self.practice, self.trial_by_trial = peru1.readTask3LogFile(self.file_name, headers=self.field_names)
-        elif self.task == 'task4':
-            self.practice, self.trial_by_trial = peru1.readTask4LogFile(self.file_name, headers=self.field_names)
-        elif self.task == 'task5':
-            self.practice, self.trial_by_trial = peru1.readTask6LogFile(self.file_name, headers=self.field_names)
-        elif self.task == 'task6':
-            self.practice, self.trial_by_trial = peru1.readTask1LogFile(self.file_name, headers=self.field_names)
+        import sub_functions as sub
+        self.practice, self.trial_by_trial = sub.read_file(self.task, self.log_file, self.task_headers,
+                                                           self.practice_headers)
 
     def summarize(self):
 
@@ -257,15 +295,17 @@ class data_file:
 if __name__ == "__main__":
     import os
 
-    subFiles = sorted(['log_files/' + f for f in os.listdir('log_files') if 'PE211020' in f])
+    subFiles = sorted(['YL_DATA_PERU/' + f for f in os.listdir('YL_DATA_PERU') if 'PE121003' in f])
     b = None
-    for i, f in enumerate(subFiles):
-        a = data_file(f)
-        if not b:
-            b = subject(a.ID, a.group, a.sibling)
-        b.add_data("task"+str(i+1), a)
-        b.dump_trial_by_trial("task" + str(i+1), 'NEW' + str(i+1) + '.csv', overwrite=True)
-    b.write_summary("New7.csv")
+    for i, f in enumerate(subFiles, start=1):
+        with open(f) as in_file:
+            print in_file
+            a = data_file(in_file)
+            if not b:
+                b = subject(a.ID, a.group, a.sibling)
+            b.add_data("task" + str(i), a)
+            b.dump_trial_by_trial("task" + str(i), 'NEW' + str(i) + '.csv', overwrite=True)
+            b.write_summary("New7.csv")
 
     with open('NEW7.csv', "r") as f:
         print f.read()
