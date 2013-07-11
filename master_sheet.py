@@ -15,6 +15,7 @@ def get1(task_dict_list):
 
     # Calculate the average number of bad touches per trial
     bad_touches = [x['NumBadTouches'] for x in task_dict_list]
+    scores = [x['Score-incorrect only'] for x in task_dict_list]
 
     # We should always have 12 trials, and be looking at the first
     # six trials versus the last six trials, but I've added this
@@ -29,7 +30,12 @@ def get1(task_dict_list):
     avg_first = np.mean(bad_touches[:mid_point])
     avg_last = np.mean(bad_touches[mid_point:])
 
-    return {'T1_BadTouches_AllTrials': avg_total, 'T1_BadTouches_First': avg_first, 'T1_BadTouchesLast:': avg_last}
+    score_first = np.mean([score for score in scores[:mid_point] if score])
+    score_last = np.mean([score for score in scores[mid_point:] if score])
+    score_total = np.mean([score for score in scores if score])
+
+    return {'T1_BadTouchesAllTrials': avg_total, 'T1_BadTouchesFirst': avg_first, 'T1_BadTouchesLast:': avg_last,
+            'T1_ScoreFirst': score_first, 'T1_ScoreLast': score_last, 'T1_ScoreAllTrials': score_total}
 
 
 def get2(task_dict_list):
@@ -125,14 +131,14 @@ def get3(task_dict_list):
         load_means = [np.mean([dot[0] for dot in trial if dot[0]])
                       for trial in trials if len(trial) == i]
 
-        acc_by_load[i] = np.mean(np.ma.masked_array(load_means, np.isnan(load_means)))
+        acc_by_load[i] = np.mean([x for x in load_means if not np.isnan(x)])
 
     acc_by_delay = {}
     for delay in [0.1, 3]:
         delay_means = [np.mean([dot[0] for dot in trial if dot[0] is not None])
                        for trial in trials if trial[0][1] == delay]
 
-        acc_by_delay[delay] = np.mean(np.ma.masked_array(delay_means, np.isnan(delay_means)))
+        acc_by_delay[delay] = np.mean([x for x in delay_means if not np.isnan(x)])
 
     return {'T3_Load1Distance': acc_by_load[1], 'T3_Load2Distance': acc_by_load[2], 'T3_Load3Distance': acc_by_load[3],
             'T3_Delay0.1Distance': acc_by_delay[0.1], 'T3_Delay3Distance': acc_by_delay[3]}
@@ -202,12 +208,12 @@ def get5(task_dict_list):
     """
     import numpy as np
 
-    values = map(np.mean, ([x['NumBadTouches'] for x in task_dict_list], [x['NumRepeats'] for x in task_dict_list], [x['AvgDistancePerTarget'] for x in task_dict_list]))
+    values = map(np.mean, ([x['NumBadTouches'] for x in task_dict_list], [x['NumRepeats'] for x in task_dict_list],
+                           [x['AvgDistancePerTarget'] for x in task_dict_list]))
     return zip(['T5_NumBadTouches', 'T5_NumRepeats', 'T5_AvgDistancePerTarget'], values)
 
 
 def better_get2(task_dict_list):
-
     """
     :param task_dict_list:
     :return: a dict object with 12 keys
@@ -259,7 +265,7 @@ def better_get2(task_dict_list):
     return {'T2_SwitchRuleAvgAccuracy': switch_rule_accuracy, 'T2_NonSwitchRuleAvgAccuracy': non_switch_rule_accuracy,
             'T2_SwitchSideAvgAccuracy': switch_side_accuracy, 'T2_NonSwitchSideAvgAccuracy': non_switch_side_accuracy,
             'T2_SameAccuracy': same_accuracy, 'T2_OppositeAccuracy': opposite_accuracy, 'T2_SwitchRuleRT':
-            switch_rule_rt, 'T2_NonSwitchRuleRT': non_switch_rule_rt, 'T2_SwitchSideRT': switch_side_rt,
+        switch_rule_rt, 'T2_NonSwitchRuleRT': non_switch_rule_rt, 'T2_SwitchSideRT': switch_side_rt,
             'T2_NonSwitchSideRT': non_switch_side_rt, 'T2_SameRT': same_rt, 'T2_OppositeRT': opposite_rt}
 
 
