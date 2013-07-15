@@ -34,7 +34,7 @@ def get1(task_dict_list):
     score_last = np.mean([score for score in scores[mid_point:] if score])
     score_total = np.mean([score for score in scores if score])
 
-    return {'T1_BadTouchesAllTrials': avg_total, 'T1_BadTouchesFirst': avg_first, 'T1_BadTouchesLast:': avg_last,
+    return {'T1_BadTouchesAllTrials': avg_total, 'T1_BadTouchesFirst': avg_first, 'T1_BadTouchesLast': avg_last,
             'T1_ScoreFirst': score_first, 'T1_ScoreLast': score_last, 'T1_ScoreAllTrials': score_total}
 
 
@@ -279,6 +279,8 @@ def get6(task_dict_list):
 
     # Calculate the average number of bad touches per trial
     bad_touches = [x['NumBadTouches'] for x in task_dict_list]
+    scores = [x['Score-incorrect only'] for x in task_dict_list]
+
 
     # We should always have 12 trials, and be looking at the first
     # six trials versus the last six trials, but I've added this
@@ -293,4 +295,9 @@ def get6(task_dict_list):
     avg_first = np.mean(bad_touches[:mid_point])
     avg_last = np.mean(bad_touches[mid_point:])
 
-    return {'T6_BadTouches_AllTrials': avg_total, 'T6_BadTouches_First': avg_first, 'T6_BadTouchesLast:': avg_last}
+    score_first = np.mean([score for score in scores[:mid_point] if score])
+    score_last = np.mean([score for score in scores[mid_point:] if score])
+    score_total = np.mean([score for score in scores if score])
+
+    return {'T6_BadTouchesAllTrials': avg_total, 'T6_BadTouchesFirst': avg_first, 'T6_BadTouchesLast': avg_last,
+            "T6_ScoreFirst": score_first, "T6_ScoreLast": score_last, "T6_ScoreAllTrials": score_total}
