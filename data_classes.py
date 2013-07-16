@@ -303,24 +303,24 @@ class data_file:
         """
         Call the read_log_file function
         """
-        import sub_functions as sub
+        import parser_functions as sub
 
         self.practice, self.trial_by_trial = sub.read_file(self.task, self.log_file, self.task_headers,
                                                            self.practice_headers)
 
     def summarize(self):
 
-        import master_sheet
+        import summarize
 
         if self.task == 'task1':
-            self.summary = master_sheet.get1(self.trial_by_trial)
+            self.summary = summarize.get1(self.trial_by_trial)
         elif self.task == 'task2':
-            self.summary = master_sheet.get2(self.trial_by_trial)
+            self.summary = summarize.get2(self.trial_by_trial)
         elif self.task == 'task3':
-            self.summary = master_sheet.get3(self.trial_by_trial)
+            self.summary = summarize.get3(self.trial_by_trial)
         elif self.task == 'task4':
-            self.summary = master_sheet.get4(self.trial_by_trial)
+            self.summary = summarize.get4(self.trial_by_trial)
         elif self.task == 'task5':
-            self.summary = master_sheet.get5(self.trial_by_trial)
+            self.summary = summarize.get5(self.trial_by_trial)
         elif self.task == 'task6':
-            self.summary = master_sheet.get6(self.trial_by_trial)
+            self.summary = summarize.get6(self.trial_by_trial)

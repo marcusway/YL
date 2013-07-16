@@ -5,7 +5,7 @@ then write the summary data to a file.
 
 import os
 import shelve
-import data_class as dat
+import data_classes as dat
 import exception_classes as e
 
 
