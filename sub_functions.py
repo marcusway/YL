@@ -2,6 +2,18 @@ import exception_classes as e
 
 
 def read_file(task_number, logFile, task_headers, practice_headers):
+    """
+
+    :param task_number: a string, one of 'task1', 'task2', ..., 'task3'
+    :param logFile: an open file object corresponding to a YL log file.
+    :param task_headers: a list of names corresponding to the information we want to parse from the log file
+    :param practice_headers: a list of names corresponding to data we wish to parse from practice trials in the log file
+    :return: two lists of dictionaries, one for practice data and one for task data.  The returned dictionary keys are
+             given by the names in practice_headers and task_headers, respectively
+
+    This function is called by the data_file class method, parse_file_data with arguments given by
+    class attributes.
+    """
 
     import csv
 
@@ -236,7 +248,6 @@ def task_2_determine_switch(task):
 
 
 def task3_determine_dot_order(task):
-
     """
     Given trial data from task 3 (in the list of lists form generated in
     the function read_file(), task3_determine_dot_order appends a value

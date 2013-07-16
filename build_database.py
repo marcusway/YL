@@ -6,6 +6,7 @@ then write the summary data to a file.
 import os
 import shelve
 import data_class as dat
+import exception_classes as e
 
 
 log_folder = ""
@@ -32,9 +33,6 @@ if os.path.isfile(summary_file):
     else:
         overwrite_summary = False
 
-print "I'm assuming that the files with individual task data are titled\n" \
-      "TASK1.csv, TASK2.csv, ..., TASK6.csv.  If you want to change that " \
-      "you have to open me up and do it yourself."
 
 subjects = {}
 bad_subs = set()
@@ -43,7 +41,11 @@ for log_file in [os.path.join('YL_DATA_PERU', f) for f in os.listdir('YL_DATA_PE
 
     # Check if the current subject number is in our dictionary
     with open(log_file, "rU") as in_file:
-        log_data = dat.data_file(in_file)
+        try:
+            log_data = dat.data_file(in_file)
+        except e.BadFileNameError:
+            print "Invalid format for file: %s\nSkipping this file."
+            continue
 
         if log_data.IDString not in subjects:
             subjects[log_data.IDString] = dat.subject(log_data.ID, log_data.group, log_data.sibling)

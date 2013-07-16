@@ -141,16 +141,27 @@ class data_file:
         self.parse_file_name(self.filename)
         self.set_task_headers()
         self.set_practice_headers()
-        self.read_file()
+        self.parse_file_data()
         self.summarize()
+
+
+
+        del self.log_file  # Just because you can't pickle files
+
+    def makeID(self):
+        """
+        Generates a unique ID string for the file.  This should be the same as the first
+        section of the filename (the bit before the first underscore).  This method would
+        probably be better to have as a part of the parse_file_name method, but this is the way things
+        have happened.  Right now PE is hard-coded.  This will have to be fixed for future studies
+        that don't use the PE prefix.
+        """
 
         if self.sibling:
             extra_letter = "s"
         else:
             extra_letter = ""
         self.IDString = 'PE' + extra_letter + self.group + self.ID
-
-        del self.log_file  # Just because you can't pickle files
 
     def parse_file_name(self, file_name):
 
@@ -180,11 +191,18 @@ class data_file:
 
         # Only accept csv files.
         if extension != ".csv":
-            raise e.BadFileNameError(file_name)
+            raise e.BadFileNameError("File: %s does not have extension, '.csv'" % file_name)
 
         # Split the file name into components. If filename = 'PE211005_IIN028_task1_5-15-2013-16-13-32',
         # name components should be = ['PE211005', 'IIN028', 'task1', '5-15-2013-16-13-32']
-        subject, device, self.task, date_and_time = name.split("_")
+        subject, device, task, date_and_time = name.split("_")
+
+        if task not in ['task1', 'task2', 'task3', 'task4', 'task5', 'task6']:
+            raise e.BadFileNameError(
+                "Invalid task designation in file: %s\nExpected one of 'task1', 'task2', ..., 'task6'\n" % file_name)
+
+        else:
+            self.task = task
 
         # Further split the subject string, which should be something like 'PE211005'
         sub_components = re.search(r'(PEs?)(\d\d)(\d+)', subject, re.IGNORECASE)
@@ -217,12 +235,12 @@ class data_file:
                               "4-digit ID number.  \nUsing SubID = %s" % (file_name, self.ID))
 
         else:  # The subject info isn't divided as expected
-            raise e.BadFileNameError(file_name)
+            raise e.BadFileNameError("File of unexpected format: %s\nCheck underscores." % file_name)
 
         # Split the date and time
         split_date = date_and_time.split("-")
         if len(split_date) != 6:
-            raise e.BadFileNameError(file_name)
+            raise e.BadFileNameError("Problem reading date/time information from file: %s\n" % file_name)
         else:
             self.date = "/".join(split_date[:3])
             self.time = ":".join(split_date[3:])
@@ -283,7 +301,7 @@ class data_file:
         elif self.task == 'task6':
             self.practice_headers = ["TrialNum", "NumBadTouches", "Score"]
 
-    def read_file(self):
+    def parse_file_data(self):
         """
         Call the read_log_file function
         """
