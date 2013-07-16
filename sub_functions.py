@@ -324,6 +324,15 @@ def task4_get_data(logReader, practice, task):
 
 
 def task5_get_data(logReader, practice, task):
+
+    """
+    Parses data from YL task5 log file and stores practice and task data in separate lists, which are passed
+    as arguments.
+
+    :param logReader: a csv.reader object generated from a YL task5 log file
+    :param practice: a (probably empty) list in which to store practice trial data
+    :param task: a (probably empty) list in which to store actual trial data
+    """
     for line in logReader:
         if "Practice" in line[0]:
             practice.append(
