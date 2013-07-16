@@ -174,6 +174,8 @@ def task_2_determine_switch(task):
     PRESSED_SIDE = 6
     GOAL_SIDE = 7
     task[0] += [True, True]
+
+
     for i in range(len(task)):
 
         # Determine whether it's a switch rule trial
@@ -285,7 +287,17 @@ def task1_get_data(logReader, practice, task):
 
 
 def task4_get_data(logReader, practice, task):
-    practiceDone = False
+    """
+    Parses summary data for each block from the task4 YL log file.
+
+    :param logReader: a csv.reader object corresponding to a YL task4 log file
+    :param practice: a list to store data from practice trials.
+    :param task: a list to store data from the actual task
+    :return: None.  practice and task lists are edited in place.
+    """
+    # practice_done variable will be set to true once
+    # the last of the practice lines have been read.
+    practice_done = False
     for line in logReader:
     # Add lines to practice until we get to the first block line
 
@@ -293,17 +305,21 @@ def task4_get_data(logReader, practice, task):
             # The line will look like this:
             # ['Block 4 Calculations', 'PercentCorrect', '91.43%', 'AvgDistanceFromCenter',
             # '32.28865', 'AvgResponseTime', '0.6529274']
-            # which we will distill to ['4', '91.43', '32.28865', '0.6529274']
+            # which we will distill to [4, 91.43, 32.28865, 0.6529274]
 
             task.append(get_values(line, (0, 2, 4, 6)))
 
-            if not practiceDone:
-                practiceDone = True
+            # Once a line with "Block" in the first column is encountered, set
+            # practice_done to true.
+            if not practice_done:
+                practice_done = True
 
+        # The first column should be blank space.
         elif line[0] and not line[0].isspace():
             raise e.BadLineError
 
-        elif not practiceDone:
+        # Add the line to the practice data
+        elif not practice_done:
             practice.append(line[1:])
 
 
