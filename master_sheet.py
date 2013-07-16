@@ -1,14 +1,17 @@
-__author__ = 'margaretsheridan'
+"""
+A set of functions that take the output of the read_file functions
+and return a dictionary of summary statistics.
+"""
 
-
-# These functions aim to grab the summary data that we want out of
-# the task dictionaries created from log file data.  The input
-# dictionaries are the output of the readTaskXLogFile() functions
 
 def get1(task_dict_list):
     """
     :param task_dict_list: list of dictionaries output
                            by readTask1LogFile function
+
+    :return a dictionary of summary summary statistics including
+            T1_BadTouchesAllTrials
+            T1_BadTouchesFirst
 
     """
     import numpy as np
@@ -40,51 +43,70 @@ def get1(task_dict_list):
 
 def get2(task_dict_list):
     """
-    :param task_dict_list: list of dictionaries output
-                           by readTask1LogFile function
-    {'Correct': '1',
-    'DistanceFromCenter': '33.87108',
-    'GoalSide': ' Left',
-    'PressedSide': ' Left',
-    'ReactionTime': '1.047791',
-    'Switch-rule': 'switch',
-    'Switch-side': 'non-switch',
-    'TargetSide': 'Opposite',
-    'TimeOut': 'False',
-    'TouchPosition': '308;379',
-    'TrialNum': '60'}
+    :param task_dict_list: A list of dictionaries from task 2 log file.
+                           Each entry of the list corresponds to a trial.
 
+    :return: a dict object with 12 keys corresponding to summary data for task 2.
+
+    This is grossly hard-coded, but it's correct
+    and produces a flat dictionary, which will
+    be easier to write to the summary file.
     """
 
     import numpy as np
-    from collections import defaultdict
 
-    # Make lists of types of trials
-    trial_type_dict = {}
+    ###############################################################
+    # Organize Trials into separate lists according to trial type #
+    ###############################################################
 
-    # The dictionary to be returned will be nested such that
-    # each key will be a trial type whose corresponding value
-    # is a dictionary with keys 'Accuracy' and 'ReactionTime'
-    out_dict = defaultdict(lambda: defaultdict())
+    non_switch_rule_trials = []
+    switch_rule_trials = []
+    non_switch_side_trials = []
+    switch_side_trials = []
+    same_trials = []
+    opposite_trials = []
 
-    # Divide trial types according to how they differ from previous trials
-    for switch_condition in ['SwitchRule', 'SwitchSide']:
-        trial_type_dict[switch_condition] = [trial for trial in task_dict_list if trial[switch_condition] is True]
-        trial_type_dict["Non" + switch_condition] = \
-            [trial for trial in task_dict_list if trial[switch_condition] is False]
+    for trial in task_dict_list:
+        if trial['SwitchRule'] is True:
+            switch_rule_trials.append(trial)
+        elif trial['SwitchRule'] is False:
+            non_switch_rule_trials.append(trial)
 
-    # Divide trial types based on rule
-    trial_type_dict['Same'] = [trial for trial in task_dict_list if trial['TargetSide'] == 'same']
-    trial_type_dict['Opposite'] = [trial for trial in task_dict_list if trial['TargetSide'] == 'opposite']
+        if trial['SwitchSide'] is True:
+            switch_side_trials.append(trial)
+        elif trial['SwitchSide'] is False:
+            non_switch_side_trials.append(trial)
 
-    # Calculate Average RT and Accuracy for each type of trial
-    for trial_type in trial_type_dict:
-        out_dict[trial_type]['Accuracy'] = np.mean(
-            [int(x['Correct']) for x in trial_type_dict[trial_type] if x['Correct'] is not None])
-        out_dict[trial_type]['ReactionTime'] = np.mean(
-            [int(x['ReactionTime']) for x in trial_type_dict[trial_type] if x['ReactionTime'] is not None])
+        if trial['TargetSide'] == "same":
+            same_trials.append(trial)
+        elif trial['TargetSide'] == "opposite":
+            opposite_trials.append(trial)
 
-    return out_dict
+    ###############################################################
+    # Calculate summary statistics for the different trial types. #
+    # Note that trials for which there is missing or incomplete   #
+    # data are not included in these calculations.                #
+    ###############################################################
+
+    switch_rule_accuracy = np.mean([x['Correct'] for x in switch_rule_trials if x['Correct'] is not None])
+    non_switch_rule_accuracy = np.mean([x['Correct'] for x in non_switch_rule_trials if x['Correct'] is not None])
+    switch_side_accuracy = np.mean([x['Correct'] for x in switch_side_trials if x['Correct'] is not None])
+    non_switch_side_accuracy = np.mean([x['Correct'] for x in non_switch_side_trials if x['Correct'] is not None])
+    same_accuracy = np.mean([x['Correct'] for x in same_trials if x['Correct'] is not None])
+    opposite_accuracy = np.mean([x['Correct'] for x in opposite_trials if x['Correct'] is not None])
+
+    switch_rule_rt = np.mean([x['ReactionTime'] for x in switch_rule_trials if x['ReactionTime'] is not None])
+    non_switch_rule_rt = np.mean([x['ReactionTime'] for x in non_switch_rule_trials if x['ReactionTime'] is not None])
+    switch_side_rt = np.mean([x['ReactionTime'] for x in switch_side_trials if x['ReactionTime'] is not None])
+    non_switch_side_rt = np.mean([x['ReactionTime'] for x in non_switch_side_trials if x['ReactionTime'] is not None])
+    same_rt = np.mean([x['ReactionTime'] for x in same_trials if x['ReactionTime'] is not None])
+    opposite_rt = np.mean([x['ReactionTime'] for x in opposite_trials if x['ReactionTime'] is not None])
+
+    return {'T2_SwitchRuleAvgAccuracy': switch_rule_accuracy, 'T2_NonSwitchRuleAvgAccuracy': non_switch_rule_accuracy,
+            'T2_SwitchSideAvgAccuracy': switch_side_accuracy, 'T2_NonSwitchSideAvgAccuracy': non_switch_side_accuracy,
+            'T2_SameAccuracy': same_accuracy, 'T2_OppositeAccuracy': opposite_accuracy, 'T2_SwitchRuleRT':
+            switch_rule_rt, 'T2_NonSwitchRuleRT': non_switch_rule_rt, 'T2_SwitchSideRT': switch_side_rt,
+            'T2_NonSwitchSideRT': non_switch_side_rt, 'T2_SameRT': same_rt, 'T2_OppositeRT': opposite_rt}
 
 
 def get3(task_dict_list):
@@ -211,62 +233,6 @@ def get5(task_dict_list):
     values = map(np.mean, ([x['NumBadTouches'] for x in task_dict_list], [x['NumRepeats'] for x in task_dict_list],
                            [x['AvgDistancePerTarget'] for x in task_dict_list]))
     return zip(['T5_NumBadTouches', 'T5_NumRepeats', 'T5_AvgDistancePerTarget'], values)
-
-
-def better_get2(task_dict_list):
-    """
-    :param task_dict_list:
-    :return: a dict object with 12 keys
-
-    This is grossly hard-coded, but it's correct
-    and produces a flat dictionary, which will
-    be easier to write to the master file
-    """
-
-    import numpy as np
-
-    non_switch_rule_trials = []
-    switch_rule_trials = []
-    non_switch_side_trials = []
-    switch_side_trials = []
-    same_trials = []
-    opposite_trials = []
-
-    for trial in task_dict_list:
-        if trial['SwitchRule'] is True:
-            switch_rule_trials.append(trial)
-        elif trial['SwitchRule'] is False:
-            non_switch_rule_trials.append(trial)
-
-        if trial['SwitchSide'] is True:
-            switch_side_trials.append(trial)
-        elif trial['SwitchSide'] is False:
-            non_switch_side_trials.append(trial)
-
-        if trial['TargetSide'] == "same":
-            same_trials.append(trial)
-        elif trial['TargetSide'] == "opposite":
-            opposite_trials.append(trial)
-
-    switch_rule_accuracy = np.mean([x['Correct'] for x in switch_rule_trials if x['Correct'] is not None])
-    non_switch_rule_accuracy = np.mean([x['Correct'] for x in non_switch_rule_trials if x['Correct'] is not None])
-    switch_side_accuracy = np.mean([x['Correct'] for x in switch_side_trials if x['Correct'] is not None])
-    non_switch_side_accuracy = np.mean([x['Correct'] for x in non_switch_side_trials if x['Correct'] is not None])
-    same_accuracy = np.mean([x['Correct'] for x in same_trials if x['Correct'] is not None])
-    opposite_accuracy = np.mean([x['Correct'] for x in opposite_trials if x['Correct'] is not None])
-
-    switch_rule_rt = np.mean([x['ReactionTime'] for x in switch_rule_trials if x['ReactionTime'] is not None])
-    non_switch_rule_rt = np.mean([x['ReactionTime'] for x in non_switch_rule_trials if x['ReactionTime'] is not None])
-    switch_side_rt = np.mean([x['ReactionTime'] for x in switch_side_trials if x['ReactionTime'] is not None])
-    non_switch_side_rt = np.mean([x['ReactionTime'] for x in non_switch_side_trials if x['ReactionTime'] is not None])
-    same_rt = np.mean([x['ReactionTime'] for x in same_trials if x['ReactionTime'] is not None])
-    opposite_rt = np.mean([x['ReactionTime'] for x in opposite_trials if x['ReactionTime'] is not None])
-
-    return {'T2_SwitchRuleAvgAccuracy': switch_rule_accuracy, 'T2_NonSwitchRuleAvgAccuracy': non_switch_rule_accuracy,
-            'T2_SwitchSideAvgAccuracy': switch_side_accuracy, 'T2_NonSwitchSideAvgAccuracy': non_switch_side_accuracy,
-            'T2_SameAccuracy': same_accuracy, 'T2_OppositeAccuracy': opposite_accuracy, 'T2_SwitchRuleRT':
-        switch_rule_rt, 'T2_NonSwitchRuleRT': non_switch_rule_rt, 'T2_SwitchSideRT': switch_side_rt,
-            'T2_NonSwitchSideRT': non_switch_side_rt, 'T2_SameRT': same_rt, 'T2_OppositeRT': opposite_rt}
 
 
 def get6(task_dict_list):

@@ -1,6 +1,7 @@
 # An attempt to use some OOP to solve this problem.
 import exception_classes as e
 
+
 class subject:
     """
     A class containing all data (including trial by trial and summary statistics)
@@ -13,6 +14,7 @@ class subject:
         self.ID = ID       # Should be a four digit number
         self.group = group    # Generally a two-digit number
         self.sibling = sibling  # True/False bool
+        self.make_id_str()      # Generate unique ID String ex: "PEs131010"
         self.data = {}       # A dictionary to be filled with data_file objects
 
     def __str__(self):
@@ -20,6 +22,15 @@ class subject:
         String representation of the object
         """
         return '<Subject Number: %s Group: %s Sibling: %s>' % (self.ID, self.group, str(self.sibling))
+
+    def make_id_str(self):
+        """ Makes an IDString key for unique  identification """
+
+        if self.sibling:
+            extra_letter = "s"
+        else:
+            extra_letter = ""
+        self.IDString = 'PE' + extra_letter + self.group + self.ID
 
     def add_data(self, task, data_object):
 
@@ -57,16 +68,16 @@ class subject:
         if os.path.isfile(out_file) and not overwrite:
             with open(out_file, "a") as out:
                 writer = csv.DictWriter(out, headers)
-                out.write(",".join(str(x) for x in [self.ID, self.group, self.sibling]) + ",")
+                out.write(",".join(str(x) for x in [self.IDString, self.ID, self.group, self.sibling]) + ",")
                 writer.writerow(full_summary)  # Should only be one row
 
         else:  # Open a new file (or overwrite old one) and write to it
             with open(out_file, "w") as out:
                 writer = csv.DictWriter(out, headers)
                 # Add header for subject ID
-                out.write('SubID,Group,Sibling,')
+                out.write('Key,SubID,Group,Sibling,')
                 writer.writeheader()
-                out.write(",".join(str(x) for x in [self.ID, self.group, self.sibling]) + ",")
+                out.write(",".join(str(x) for x in [self.IDString, self.ID, self.group, self.sibling]) + ",")
                 writer.writerow(full_summary)
 
     def dump_trial_by_trial(self, task, out_file, overwrite=False):
@@ -94,12 +105,13 @@ class subject:
         else:  # Open a new file (or overwrite old one) and write to it
             with open(out_file, "w") as out:
                 writer = csv.DictWriter(out, self.data[task].task_headers)
-                out.write('SubID,Group,Sibling,Device,Time,')
+                out.write('IDString,SubID,Group,Sibling,Device,Time,')
                 writer.writeheader()
                 for row in self.data[task].trial_by_trial:
                     out.write(
-                        ",".join(str(x) for x in [self.ID, self.group, self.sibling, self.data[task].device,
-                                                  self.data[task].time]) + ",")
+                        ",".join(
+                            str(x) for x in [self.IDString, self.ID, self.group, self.sibling, self.data[task].device,
+                                             self.data[task].time]) + ",")
                     writer.writerow(row)
 
     def summarize_data(self):
@@ -112,7 +124,6 @@ class subject:
             full_summary.update(self.data[task].summary)
 
         return full_summary
-
 
 
 class data_file:
@@ -132,6 +143,13 @@ class data_file:
         self.set_practice_headers()
         self.read_file()
         self.summarize()
+
+        if self.sibling:
+            extra_letter = "s"
+        else:
+            extra_letter = ""
+        self.IDString = 'PE' + extra_letter + self.group + self.ID
+
         del self.log_file  # Just because you can't pickle files
 
     def parse_file_name(self, file_name):
@@ -270,6 +288,7 @@ class data_file:
         Call the read_log_file function
         """
         import sub_functions as sub
+
         self.practice, self.trial_by_trial = sub.read_file(self.task, self.log_file, self.task_headers,
                                                            self.practice_headers)
 
@@ -280,7 +299,7 @@ class data_file:
         if self.task == 'task1':
             self.summary = master_sheet.get1(self.trial_by_trial)
         elif self.task == 'task2':
-            self.summary = master_sheet.better_get2(self.trial_by_trial)
+            self.summary = master_sheet.get2(self.trial_by_trial)
         elif self.task == 'task3':
             self.summary = master_sheet.get3(self.trial_by_trial)
         elif self.task == 'task4':
