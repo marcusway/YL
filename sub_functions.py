@@ -153,7 +153,7 @@ def tasks23_get_data(logReader, practice, task):
         # If we get a row with something other
         # than "Task" in the first column, report an error.
         elif line[0] and not line[0].isspace():
-            raise e.BadLineError
+            raise e.BadLineError("Expected blank first column in line: %s" % str(line))
 
         # Add the current row to its appropriate list
         else:
@@ -269,7 +269,7 @@ def task1_get_data(logReader, practice, task):
         # If we get a row with something other
         # than "Task" in the first column, report an error.
         elif line[0] and not line[0].isspace():
-            raise e.BadLineError(line)
+            raise e.BadLineError("Expected blank first column in line: %s" % str(line))
 
         # Add the current row to its appropriate list
         else:
@@ -316,7 +316,7 @@ def task4_get_data(logReader, practice, task):
 
         # The first column should be blank space.
         elif line[0] and not line[0].isspace():
-            raise e.BadLineError
+            raise e.BadLineError("Expected blank first column in line: %s" % str(line))
 
         # Add the line to the practice data
         elif not practice_done:
