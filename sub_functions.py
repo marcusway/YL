@@ -39,7 +39,7 @@ def read_file(task_number, logFile, task_headers, practice_headers):
         task1_get_data(logReader, practice, task)
 
     elif task_number == 'task2' or task_number == 'task3':
-        grab_raw_data(logReader, practice, task)
+        tasks23_get_data(logReader, practice, task)
 
         if task_number == 'task2':
             task_2_determine_switch(task)
@@ -128,7 +128,18 @@ def get_values(line, indices):
     return [cleaned_string(x) for x in (line[y] for y in indices)]
 
 
-def grab_raw_data(logReader, practice, task):
+def task23_get_data(logReader, practice, task):
+
+    """
+    Reads practice and task data from log files for tasks 2 and 3 and stores
+    the trial data in practice and task (both are lists).
+
+    :param logReader: a csv.reader object from YL log file
+    :param practice: a (probably empty) list to store practice data
+    :param task: a (probably empty) list to store task data
+    :raise: raises a BadLineError when there is a line of unexpected format.
+    """
+
     currTrialType = practice
 
     for line in logReader:
