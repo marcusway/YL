@@ -43,9 +43,10 @@ for log_file in [os.path.join('YL_DATA_PERU', f) for f in os.listdir('YL_DATA_PE
     with open(log_file, "rU") as in_file:
         try:
             log_data = dat.data_file(in_file)
-        except e.BadFileNameError:
-            print "Invalid format for file: %s\nSkipping this file."
+        except e.BadFileNameError as bfe:
+            print "Invalid format for file: %s\n%s\nSkipping this file." % (in_file, bfe)
             continue
+        except e.TaskNameError as tne:
 
         if log_data.IDString not in subjects:
             subjects[log_data.IDString] = dat.subject(log_data.ID, log_data.group, log_data.sibling)

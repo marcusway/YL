@@ -143,9 +143,6 @@ class data_file:
         self.set_practice_headers()
         self.parse_file_data()
         self.summarize()
-
-
-
         del self.log_file  # Just because you can't pickle files
 
     def makeID(self):

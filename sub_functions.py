@@ -19,17 +19,22 @@ def read_file(task_number, logFile, task_headers, practice_headers):
 
     logReader = csv.reader(logFile)
 
+    # Check if the task number argument is valid
     if task_number not in ['task1', 'task2', 'task3', 'task4', 'task5', 'task6']:
         raise e.TaskNameError(task_number)
 
-    if task_number in ['task3', 'task5', 'task6', 'task4']:
-        skip_lines(logReader, 2)
-    else:
+    # Skip over unused metadata at the top of the file (different tasks have different numbers of unused lines)
+    if task_number in ['task1', 'task2']:
         skip_lines(logReader, 3)
+    else:
+        skip_lines(logReader, 2)
 
+    # Initialize empty practice and task lists to store data trial by trial
     task = []
     practice = []
 
+    # Call on task-specific parser functions to read data from log_file and store appropriate data in
+    # task and practice lists
     if task_number == 'task1' or task_number == 'task6':
         task1_get_data(logReader, practice, task)
 
@@ -47,90 +52,10 @@ def read_file(task_number, logFile, task_headers, practice_headers):
     elif task_number == 'task5':
         task5_get_data(logReader, practice, task)
 
+    # Return two lists of dictionaries, the first of which corresponds to practice data, the second of
+    # which holds the actual trial data.
     return [dict(zip(practice_headers, trial)) for trial in practice], [dict(zip(task_headers, trial)) for trial in
                                                                         task]
-
-
-def parse_file_name(file_name):
-    """
-    Given a log file name of a specific format
-    for the YL data, should yield the
-    subject number and group (age)
-    membership of the subject. A file of the defined format is:
-
-    'PE211005_IIN028_task1_5-15-2013-16-13-32'
-
-    The PE is just a prefix (for Peru?).  The two numbers following
-    the PE (21 in this case) indicate membership to a certain group.
-    the numbers after 'IIN' specify the device on which the tasks were
-    completed.  The number following 'task' indicates to which task
-    the log file corresponds.  The string of numbers at the end
-    (5-15-2013-16-13-32) correspond to the date and time of completion
-    (month-day-year-hour-minute-second)
-    """
-
-    import os
-    import re
-    import warnings
-
-    # Initialize a dictionary, metadata, in which to store
-    # all of the information parsed from the file name.
-    metadata = {}
-
-    name, extension = os.path.splitext(os.path.basename(file_name))
-
-    # Only accept csv files.
-    if extension != ".csv":
-        raise e.BadFileNameError(file_name)
-
-    # Split the file name into components. If filename = 'PE211005_IIN028_task1_5-15-2013-16-13-32',
-    # name components should be = ['PE211005', 'IIN028', 'task1', '5-15-2013-16-13-32']
-    try:
-        subject, device, metadata['Task'], date_and_time = name.split("_")
-    except ValueError:
-        raise e.BadFileNameError(file_name)
-
-    # Further split the subject string, which should be something like 'PE211005'
-    sub_components = re.search(r'(PEs?)(\d\d)(\d+)', subject, re.IGNORECASE)
-
-    # This should split the subject data into match.group(1) = 'PE',
-    # match.group(2) = '21', and match.group(3) = 1005.  Note that
-    # this assumes that the group number is always two digits, but
-    # allows for the subject number to vary in length.
-    if not sub_components:
-        raise e.BadFileNameError(file_name)
-
-    if len(sub_components.groups()) == 3:
-
-        # Check if sibling
-        if 's' in sub_components.group(1).lower():  # ignoring upper/lower case
-            metadata['Sibling'] = True
-        else:
-            metadata['Sibling'] = False
-
-        # Record group
-        metadata['Group'] = sub_components.group(2)  # two digits following PE/PEs
-        # Record subject number
-        metadata['SubID'] = sub_components.group(3)  # all digits following
-        metadata['Device'] = device
-
-        # We expect 6 digits following PE (or PEs).  If there is a different number,
-        # warn the user, but don't raise an error.
-        if len(metadata['SubID']) != 4:
-            warnings.warn("File name of unexpected format: %s\nExpected a 2-digit group number and "
-                          "4-digit ID number.\nUsing SubID = %s" % (file_name, metadata['SubID']))
-
-    else:  # The subject info isn't divided as expected
-        raise e.BadFileNameError(file_name)
-
-    # Split the date and time
-    split_date = date_and_time.split("-")
-    if len(split_date) != 6:
-        raise e.BadFileNameError(file_name)
-    metadata['Date'] = "/".join(split_date[:3])
-    metadata['Time'] = ":".join(split_date[3:])
-
-    return metadata
 
 
 def cleaned_string(in_str):
@@ -138,26 +63,46 @@ def cleaned_string(in_str):
     A function to translate the string values
     read from log files into values that
     can be manipulated later for data analysis.
+
+    :param in_str: a string from YL log file
+    :return just_text:  a cleaned version of in_str,
+                        changed to a different data type.
     """
-    if in_str:
+    if in_str:  # If it isn't the empty string
+
+        # Make all lower-case, get rid of whitespace
         just_text = in_str.strip().lower()
+
+        # Convert Boolean values
         if just_text == 'false':
             return False
         elif just_text == 'true':
             return True
+
+        # A "." is used when there is missing data in the log files.
+        # Return None when this is encountered.
         elif just_text == ".":
             return None
+
+        # If the string is all numerical (i.e., all members of the string are numerical and there is no decimal point)
+        # return it as an int
         elif just_text.isdigit():
             return int(just_text)
+
+        # Special for task5, which is done in blocks
         elif "block" in just_text and "calculations" in just_text:
             return int(just_text.split()[1])
+
+        # Convert percentages to floats
         elif just_text.replace(".", "").strip("%").isdigit():
             return float(just_text.strip("%"))
+
+        # Coordinate values are often given in (x;y) format.  Convert to tuple(x,y)
         elif ";" in just_text:
             return tuple(float(x.strip("()")) for x in just_text.split(";"))
         else:
             return just_text
-    else:
+    else: # If it's the empty string, return None
         return None
 
 

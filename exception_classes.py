@@ -3,6 +3,7 @@ Some classes for handling problems that
 seem likely to occur
 """
 
+
 class BadLineError(Exception):
     """
     raise when the contents of the
@@ -17,6 +18,7 @@ class BadFileNameError(Exception):
     expected format
     """
     pass
+
 
 class TaskNameError(Exception):
     """
