@@ -324,22 +324,3 @@ class data_file:
             self.summary = master_sheet.get5(self.trial_by_trial)
         elif self.task == 'task6':
             self.summary = master_sheet.get6(self.trial_by_trial)
-
-
-if __name__ == "__main__":
-    import os
-
-    subFiles = sorted(['YL_DATA_PERU/' + f for f in os.listdir('YL_DATA_PERU') if 'PE121003' in f])
-    b = None
-    for i, f in enumerate(subFiles, start=1):
-        with open(f) as in_file:
-            print in_file
-            a = data_file(in_file)
-            if not b:
-                b = subject(a.ID, a.group, a.sibling)
-            b.add_data("task" + str(i), a)
-            b.dump_trial_by_trial("task" + str(i), 'NEW' + str(i) + '.csv', overwrite=True)
-            b.write_summary("New7.csv")
-
-    with open('NEW7.csv', "r") as f:
-        print f.read()
