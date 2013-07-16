@@ -23,6 +23,9 @@ while not os.path.isdir(log_folder):
 # Get user input for summary file
 summary_file = raw_input("Please enter the path to your summary data spreadsheet:")
 
+# Ask user for path to shelve database file
+shelve_database = raw_input("Please enter the path to your shelve database: ")
+
 # If the named output file already exists, see if the user wishes to overwrite the file
 if os.path.isfile(summary_file):
     w = ""
@@ -82,7 +85,7 @@ for log_file in [os.path.join(log_folder, f) for f in os.listdir(log_folder)]:
         # Update the corresponding subject's data dictionary with the data from the log file object
         subjects[log_data.IDString].add_data(log_data.task, log_data)
 
-db = shelve.open("DATABASE1")
+db = shelve.open(shelve_database)
 try:
     for sub in subjects:
         if sub in db:
