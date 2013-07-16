@@ -163,6 +163,14 @@ def task23_get_data(logReader, practice, task):
 
 
 def task_2_determine_switch(task):
+    """
+    Determines which trials were switch rule (i.e, whether the subject has to press to the same or opposite
+    side on the present trial is the opposite from the last trial) or switch side (the correct side to press
+    on the present trial is the opposite of the last trial).  This is for task 2.
+
+    :param task: A list where each entry is a list containing trial-specific data
+    :return: None.  The task list is edited in place.
+    """
     PRESSED_SIDE = 6
     GOAL_SIDE = 7
     task[0] += [True, True]
