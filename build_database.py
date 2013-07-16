@@ -36,7 +36,6 @@ if os.path.isfile(summary_file):
     else:
         overwrite_summary = False
 
-
 subjects = {}
 bad_subs = set()
 # Iterate over all the files
