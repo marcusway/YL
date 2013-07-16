@@ -7,7 +7,7 @@ and return a dictionary of summary statistics.
 def get1(task_dict_list):
     """
     :param task_dict_list: list of dictionaries output
-                           by readTask1LogFile function
+                           by read_file function
 
     :return a dictionary of summary summary statistics including
             T1_BadTouchesAllTrials
@@ -115,6 +115,8 @@ def get3(task_dict_list):
     task three corresponds to an individual dot press, not an individual trial
     (there may be 1,2, or 3 dot presses per trial).
 
+    EXAMPLE INPUT: would consist of a list of dictionaries like these:
+
      {'Delay': 0.1,
       'DistanceFromCenter': 38.38547,
       'DotPressed': 4,
@@ -126,6 +128,7 @@ def get3(task_dict_list):
       'TimeOut': False,
       'TouchPosition': (263.0, 369.0),
       'TrialNum': 56},
+
 
     """
 
@@ -168,7 +171,7 @@ def get3(task_dict_list):
 
 def get4(task_dict_list):
     """
-    Reads Task 4 dictionary (output from readTask4LogFile)
+    Reads Task 4 dictionary (output from read_file)
     and outputs summary data.  Input looks like:
 
     [{'AvgDistanceFromCenter': 15.30155,
@@ -210,7 +213,7 @@ def get4(task_dict_list):
 
 def get5(task_dict_list):
     """
-    Reads Task 5 dictionary list (output from readTask5LogFile)
+    Reads Task 5 dictionary list (output from read_file)
     and outputs summary data. Input looks like:
 
     {'AvgDistancePerTarget': 170.9032,
