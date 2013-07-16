@@ -108,9 +108,10 @@ def cleaned_string(in_str):
 
 def skip_lines(reader, n):
     """
+    Most of the log files have 2 or 3 lines at the top of the file containing some sort of metadata
+    that isn't used in these analyses.  This function just skips the number of lines specified by argument, n.
     :param reader: a csv reader object
-    :param n: the number of lines to skip
-    :return:
+    :param n: the number of lines to skip (an int)
     """
     for i in xrange(n):
         reader.next()
