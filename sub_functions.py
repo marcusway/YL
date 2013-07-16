@@ -128,7 +128,7 @@ def get_values(line, indices):
     return [cleaned_string(x) for x in (line[y] for y in indices)]
 
 
-def task23_get_data(logReader, practice, task):
+def tasks23_get_data(logReader, practice, task):
 
     """
     Reads practice and task data from log files for tasks 2 and 3 and stores
