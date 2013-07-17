@@ -98,14 +98,15 @@ class subject:
 
                 for trial in self.data[task].trial_by_trial:
                     out.write(
-                        ",".join(str(x) for x in [self.ID, self.group, self.sibling, self.data[task].device,
-                                                  self.data[task].time]) + ",")
+                        ",".join(
+                            str(x) for x in [self.IDString, self.ID, self.group, self.sibling, self.data[task].device,
+                                             self.data[task].time]) + ",")
                     writer.writerow(trial)
 
         else:  # Open a new file (or overwrite old one) and write to it
             with open(out_file, "w") as out:
                 writer = csv.DictWriter(out, self.data[task].task_headers)
-                out.write('IDString,SubID,Group,Sibling,Device,Time,')
+                out.write('Key,SubID,Group,Sibling,Device,Time,')
                 writer.writeheader()
                 for row in self.data[task].trial_by_trial:
                     out.write(

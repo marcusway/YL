@@ -13,7 +13,7 @@ log_folder = ""
 summary_file = ""
 task_files = ""
 overwrite_summary = False
-overwrite_task = False
+overwrite_task = True
 
 # Prompt the user for the path to their log files folder.
 # The user will be continually prompted until they give a real folder.
@@ -50,13 +50,13 @@ for log_file in [os.path.join(log_folder, f) for f in os.listdir(log_folder)]:
         try:
             log_data = dat.data_file(in_file)
         except e.BadFileNameError as bfe:
-            print "Invalid format for file: %s\n%s\nSkipping this file." % (in_file, bfe)
+            print "Invalid format for file: %s\n%s\nSkipping this file." % (in_file.name, bfe)
             continue
         except e.TaskNameError as tne:
-            print "Invalid task name encountered in processing file: %s\n%s\nSkipping this file" % (in_file, tne)
+            print "Invalid task name encountered in processing file: %s\n%s\nSkipping this file" % (in_file.name, tne)
             continue
         except e.BadLineError as ble:
-            print "Line of unexpected format encountered in file: %s\n%s\nSkipping this file" % (in_file, ble)
+            print "Line of unexpected format encountered in file: %s\n%s\nSkipping this file" % (in_file.name, ble)
             continue
 
         # If the subject associated with the log file is not yet in the subject dictionary, create a new entry
@@ -103,3 +103,7 @@ for sub in subjects:
     # After the first call to write summary, we want to continue to write
     # to the same file instead of overwriting every time.
     overwrite_summary = False
+
+    for task in subjects[sub].data:
+        subjects[sub].dump_trial_by_trial(task, task + '.csv', overwrite=overwrite_task)
+    overwrite_task = False
