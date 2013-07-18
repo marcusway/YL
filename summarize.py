@@ -9,17 +9,21 @@ def mean(x):
     A roll your own function to get the mean of a list of numbers
     so that we don't have to use Numpy.  This ignores missing values, so
     mean([1,2,3,None]) = 6/3 = 2
-    :param x:
-    :return:
+    :param x: a list of numbers
+    :return average: a float, the mean of the numbers in x
     """
-
+    # Ignore any "None" values
     new_array = [i for i in x if i is not None]
     n_entries = len(new_array)
+
+    # Calculate the mean of the new array the old-fashioned way
     if n_entries > 0:
-        average = sum([float(i) for i in new_array])/n_entries
-    else:
+        average = float(sum([i for i in new_array]))/n_entries
+    else:  # If the array has no legitimate values, set the average to none
         average = None
+
     return average
+
 
 def get1(task_dict_list):
     """
@@ -58,6 +62,7 @@ def get1(task_dict_list):
 
 
 def get2(task_dict_list):
+
     """
     :param task_dict_list: A list of dictionaries from task 2 log file.
                            Each entry of the list corresponds to a trial.
