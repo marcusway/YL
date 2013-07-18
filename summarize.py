@@ -213,7 +213,6 @@ def get4(task_dict_list):
 
     """
 
-
     rand_blocks = (1, 4)
     rule_blocks = (2, 3, 5)
 

@@ -26,7 +26,7 @@ if os.path.isfile(seen_file_store):
 else:
     already_seen = set()
 
-print "I've already seen %d files" % len(already_seen)
+print "Number of previously processed log files to date: %d" % len(already_seen)
 # Get User Input
 
 # Prompt the user for the path to their log files folder.
@@ -101,13 +101,17 @@ except IOError as io:
     print "Problem opening database file: %s\nError: %s" % (shelve_database, io)
 
 for sub in subjects:
+    # If there is already a record of the subject in the shelve database,
+    # check to see if there is missing task data and update the subject if this is the case
     if sub in db:
-        print "There is already an entry for subject %s." % sub
+        print "Pre-existing DATABASE entry for subject %s." % sub
+        for task in subjects[sub].data:
+            if task not in db[sub].data:
+                update = db[sub]
+                update.add_data(task, subjects[sub].data[task])
+                db[sub] = update
     else:
-        try:
-            db[sub] = subjects[sub]
-        except Exception as problem:  # Make sure we close the database no matter what
-            print "An error occurred writing subject %s to database:\n%s" % (sub, problem)
+        db[sub] = subjects[sub]
 db.close()
 
 # Iterate over the new dictionary
