@@ -1,7 +1,7 @@
 import exception_classes as e
 
 
-def read_file(task_number, logFile, task_headers, practice_headers):
+def read_log_file(task_number, logFile, task_headers, practice_headers):
     """
 
     :param task_number: a string, one of 'task1', 'task2', ..., 'task3'

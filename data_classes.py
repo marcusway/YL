@@ -14,7 +14,6 @@ class subject:
         self.ID = ID       # Should be a four digit number
         self.group = group    # Generally a two-digit number
         self.sibling = sibling  # True/False bool
-        self.make_id_str()      # Generate unique ID String ex: "PEs131010"
         self.data = {}       # A dictionary to be filled with data_file objects
 
     def __str__(self):
@@ -22,15 +21,6 @@ class subject:
         String representation of the object
         """
         return '<Subject Number: %s Group: %s Sibling: %s>' % (self.ID, self.group, str(self.sibling))
-
-    def make_id_str(self):
-        """ Makes an IDString key for unique  identification """
-
-        if self.sibling:
-            extra_letter = "s"
-        else:
-            extra_letter = ""
-        self.IDString = 'PE' + extra_letter + self.group + self.ID
 
     def add_data(self, task, data_object):
 
@@ -68,7 +58,7 @@ class subject:
         if os.path.isfile(out_file) and not overwrite:
             with open(out_file, "a") as out:
                 writer = csv.DictWriter(out, headers)
-                out.write(",".join(str(x) for x in [self.IDString, self.ID, self.group, self.sibling]) + ",")
+                out.write(",".join(str(x) for x in [self.key, self.ID, self.group, self.sibling]) + ",")
                 writer.writerow(full_summary)  # Should only be one row
 
         else:  # Open a new file (or overwrite old one) and write to it
@@ -77,7 +67,7 @@ class subject:
                 # Add header for subject ID
                 out.write('Key,SubID,Group,Sibling,')
                 writer.writeheader()
-                out.write(",".join(str(x) for x in [self.IDString, self.ID, self.group, self.sibling]) + ",")
+                out.write(",".join(str(x) for x in [self.key, self.ID, self.group, self.sibling]) + ",")
                 writer.writerow(full_summary)
 
     def dump_trial_by_trial(self, task, out_file, overwrite=False):
@@ -99,7 +89,7 @@ class subject:
                 for trial in self.data[task].trial_by_trial:
                     out.write(
                         ",".join(
-                            str(x) for x in [self.IDString, self.ID, self.group, self.sibling, self.data[task].device,
+                            str(x) for x in [self.key, self.ID, self.group, self.sibling, self.data[task].device,
                                              self.data[task].time]) + ",")
                     writer.writerow(trial)
 
@@ -111,7 +101,7 @@ class subject:
                 for row in self.data[task].trial_by_trial:
                     out.write(
                         ",".join(
-                            str(x) for x in [self.IDString, self.ID, self.group, self.sibling, self.data[task].device,
+                            str(x) for x in [self.key, self.ID, self.group, self.sibling, self.data[task].device,
                                              self.data[task].time]) + ",")
                     writer.writerow(row)
 
@@ -144,31 +134,24 @@ class data_file:
         self.set_practice_headers()
         self.parse_file_data()
         self.summarize()
-        self.makeID()
         del self.log_file  # Just because you can't pickle files
-
-    def makeID(self):
-        """
-        Generates a unique ID string for the file.  This should be the same as the first
-        section of the filename (the bit before the first underscore).  This method would
-        probably be better to have as a part of the parse_file_name method, but this is the way things
-        have happened.  Right now PE is hard-coded.  This will have to be fixed for future studies
-        that don't use the PE prefix.
-        """
-
-        if self.sibling:
-            extra_letter = "s"
-        else:
-            extra_letter = ""
-        self.IDString = 'PE' + extra_letter + self.group + self.ID
 
     def parse_file_name(self, file_name):
 
         """
         Given a log file name of a specific format
-        for the YL data, should yield the
-        subject number and group (age)
-        membership of the subject. A file of the defined format is:
+        for the YL data, will determine and assign values to attributes:
+
+        self.task --> A string, one of 'task1', 'task2', ..., 'task6'
+        self.sibling --> True/False
+        self.group --> a two-digit number string
+        self.ID --> a (hopefully) four-digit number string, though this is allowed to vary.
+        self.key --> a unique identifier for the subject
+        self.date --> the date when the file was generated
+        self.time --> the time when the file was generated
+        self.device --> a string identifying the device on which the task was administered
+
+        A file of the defined format is:
 
         'PE211005_IIN028_task1_5-15-2013-16-13-32'
 
@@ -179,7 +162,21 @@ class data_file:
         the log file corresponds.  The string of numbers at the end
         (5-15-2013-16-13-32) correspond to the date and time of completion
         (month-day-year-hour-minute-second). The letters 'PE' may or may not
-        be followed by an 's'.
+        be followed by an 's', which indicates that that particular subject
+        is a younger sibling of another subject with an identical ID number (other than the s).
+
+        Example:
+
+        The file name: 'PE211005_IIN028_task1_5-15-2013-16-13-32' will yield the following result:
+
+        self.task = 'task1'
+        self.sibling = False (since there's no 's' after 'PE')
+        self.group = '21'
+        self.ID = '1005'
+        self.key = 'PE211005'
+        self.date = '5/15/2013'
+        self.time = '16:13:32'
+        self.device = 'IIN028'
         """
 
         import os
@@ -204,7 +201,7 @@ class data_file:
             self.task = task
 
         # Further split the subject string, which should be something like 'PE211005'
-        sub_components = re.search(r'(PEs?)(\d\d)(\d+)', subject, re.IGNORECASE)
+        sub_components = re.search(r'(\w\ws?)(\d\d)(\d+)', subject, re.IGNORECASE)
 
         # This should split the subject data into match.group(1) = 'PE',
         # match.group(2) = '21', and match.group(3) = 1005.  Note that
@@ -233,6 +230,7 @@ class data_file:
                 warnings.warn("File name of unexpected format: %s  \nExpected a 2-digit group number and "
                               "4-digit ID number.  \nUsing SubID = %s" % (file_name, self.ID))
 
+            self.key = sub_components
         else:  # The subject info isn't divided as expected
             raise e.BadFileNameError("File of unexpected format: %s\nCheck underscores." % file_name)
 
@@ -247,8 +245,13 @@ class data_file:
     def set_task_headers(self):
 
         """
-        Determines which field names to use when reading from the log file into
-        the task dictionary list.
+        Assigns a value to self.practice_headers according to the value
+        of self.task. Said value will be in the from of a list of
+        strings (header names), which correspond to the data that we are interested in extracting
+        from the log files.  This function is for task trials, specifically, as the headers
+        for practice trials differ slightly from those associated with actual task trials.
+
+        :return: None.  Value of self.practice_headers is assigned (as a list of strings)
         """
 
         if self.task == 'task1':
@@ -276,6 +279,16 @@ class data_file:
             self.task_headers = ["TrialNum", "NumBadTouches", "Score", "Score-incorrect only"]
 
     def set_practice_headers(self):
+
+        """
+        Assigns a value to self.practice_headers according to the value
+        of self.task. Said value will be in the from of a list of
+        strings (header names), which correspond to the data that we are interested in extracting
+        from the log files.  This function is for practice trials, specifically, as the headers
+        for practice trials differ slightly from those associated with actual task trials.
+
+        :return: None.  Value of self.practice_headers is assigned (as a list of strings)
+        """
 
         if self.task == 'task1':
             self.practice_headers = ["TrialNum", "NumBadTouches", "Score"]
@@ -306,10 +319,18 @@ class data_file:
         """
         import parser_functions as sub
 
-        self.practice, self.trial_by_trial = sub.read_file(self.task, self.log_file, self.task_headers,
+        self.practice, self.trial_by_trial = sub.read_log_file(self.task, self.log_file, self.task_headers,
                                                            self.practice_headers)
 
     def summarize(self):
+
+        """
+        Generates task-specific summary data according to the value of self.task.
+        The actual computation of the summary data relies on a call to a
+        task-specific function, imported from summarize.py
+
+        :return: None.  Assigns a value to self.summary
+        """
 
         import summarize
 

@@ -5,15 +5,29 @@ then write the summary data to a file.
 
 import os
 import shelve
+import cPickle as pickle
 import data_classes as dat
 import exception_classes as e
 
+# Initialize default values
 
-log_folder = ""
-summary_file = ""
-task_files = ""
+log_folder        = ""
+summary_file      = ""
 overwrite_summary = False
-overwrite_task = True
+overwrite_task    = True
+shelve_database   = ".YL_DATABASE"  # Automatically store the shelve DB in code directory
+subjects          = {}
+seen_file_store   = ".PROCESSED_FILES.pck"
+
+# Load a pickled list of already seen files
+if os.path.isfile(seen_file_store):
+    with open(seen_file_store, "rb") as f:
+        already_seen = pickle.load(f)
+else:
+    already_seen = set()
+
+print "I've already seen %d files" % len(already_seen)
+# Get User Input
 
 # Prompt the user for the path to their log files folder.
 # The user will be continually prompted until they give a real folder.
@@ -23,8 +37,9 @@ while not os.path.isdir(log_folder):
 # Get user input for summary file
 summary_file = raw_input("Please enter the path to your summary data spreadsheet:")
 
-# Ask user for path to shelve database file
-shelve_database = raw_input("Please enter the path to your shelve database: ")
+# Make sure they haven't just given you a directory
+while os.path.isdir(summary_file):
+    summary_file = raw_input("%s is a directory.  Please enter a valid file name: " % summary_file)
 
 # If the named output file already exists, see if the user wishes to overwrite the file
 if os.path.isfile(summary_file):
@@ -36,10 +51,11 @@ if os.path.isfile(summary_file):
     else:
         overwrite_summary = False
 
-subjects = {}
-bad_subs = set()
+# Make a list of files not already seen
+new_files = set(f for f in os.listdir(log_folder)).difference(already_seen)
+
 # Iterate over all the files
-for log_file in [os.path.join(log_folder, f) for f in os.listdir(log_folder)]:
+for log_file in [os.path.join(log_folder, f) for f in new_files]:
 
     # Check if the current subject number is in our dictionary
     with open(log_file, "rU") as in_file:
@@ -50,51 +66,50 @@ for log_file in [os.path.join(log_folder, f) for f in os.listdir(log_folder)]:
         try:
             log_data = dat.data_file(in_file)
         except e.BadFileNameError as bfe:
-            print "Invalid format for file: %s\n%s\nSkipping this file." % (in_file.name, bfe)
+            print "Invalid file name format for file: %s\n%s\nSkipping this file.\n" % (in_file.name, bfe)
             continue
         except e.TaskNameError as tne:
-            print "Invalid task name encountered in processing file: %s\n%s\nSkipping this file" % (in_file.name, tne)
+            print "Invalid task name encountered in processing file: %s\n%s\nSkipping this file\n" % (in_file.name, tne)
             continue
         except e.BadLineError as ble:
-            print "Line of unexpected format encountered in file: %s\n%s\nSkipping this file" % (in_file.name, ble)
+            print "Line of unexpected format encountered in log file: %s\n%s\nSkipping this file\n" % (in_file.name, ble)
             continue
 
         # If the subject associated with the log file is not yet in the subject dictionary, create a new entry
-        if log_data.IDString not in subjects:
-            subjects[log_data.IDString] = dat.subject(log_data.ID, log_data.group, log_data.sibling)
+        if log_data.key not in subjects:
+            subjects[log_data.key] = dat.subject(log_data.ID, log_data.group, log_data.sibling)
 
         # If there is an existing subject, check to make sure subject data matches (sibling, group)
         else:
-            # Check if sibling data from log file matches that in the subject object
-            if log_data.sibling != subjects[log_data.IDString].sibling:
-                print "Conflicting sibling info for subject %s" % log_data.ID
-                bad_subs.add(log_data.IDString)
-
-            # Check if the group number matches
-            if log_data.group != subjects[log_data.IDString].group:
-                print "Conflicting Group Info for subject: %s" % log_data.ID
-                bad_subs.add(log_data.IDString)
-
             # Check if there are multiple task files for the given subject for the given task number
             # (e.g. see if subject PE231010 has more than one task1 log file)
-            if log_data.task in subjects[log_data.IDString].data:
-                print "Multiple %s files for subject %s:" % (log_data.task, log_data.IDString)
-                bad_subs.add(log_data.IDString)
+            if log_data.task in subjects[log_data.key].data:
+                print "Multiple %s files for subject %s:" % (log_data.task, log_data.key)
 
         # Update the corresponding subject's data dictionary with the data from the log file object
-        subjects[log_data.IDString].add_data(log_data.task, log_data)
+        subjects[log_data.key].add_data(log_data.task, log_data)
+        already_seen.add(os.path.basename(log_file))
 
-db = shelve.open(shelve_database)
+# Update the set of already seen files.
+with open(seen_file_store, "wb") as f:
+    pickle.dump(already_seen, f)
+
+# Write the data to a shelve database
 try:
-    for sub in subjects:
-        if sub in db:
-            print "There is already an entry for subject %s." % sub
-        else:
+    db = shelve.open(shelve_database)
+except IOError as io:
+    print "Problem opening database file: %s\nError: %s" % (shelve_database, io)
+
+for sub in subjects:
+    if sub in db:
+        print "There is already an entry for subject %s." % sub
+    else:
+        try:
             db[sub] = subjects[sub]
-except: # Make sure we close the database no matter what
-    print "An error occurred writing to database"
-finally:
-    db.close()
+        except Exception as problem:  # Make sure we close the database no matter what
+            print "An error occurred writing to database:\n%s" % problem
+
+
 
 # Iterate over the new dictionary
 for sub in subjects:
@@ -107,3 +122,5 @@ for sub in subjects:
     for task in subjects[sub].data:
         subjects[sub].dump_trial_by_trial(task, task + '.csv', overwrite=overwrite_task)
     overwrite_task = False
+
+print "\n\nAll Done!\n\n"
