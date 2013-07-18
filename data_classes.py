@@ -195,6 +195,7 @@ class data_file:
         # Split the file name into components. If filename = 'PE211005_IIN028_task1_5-15-2013-16-13-32',
         # name components should be = ['PE211005', 'IIN028', 'task1', '5-15-2013-16-13-32']
         subject, device, task, date_and_time = name.split("_")
+        self.key = subject
 
         if task not in ['task1', 'task2', 'task3', 'task4', 'task5', 'task6']:
             raise e.BadFileNameError(
@@ -233,7 +234,6 @@ class data_file:
                 warnings.warn("File name of unexpected format: %s  \nExpected a 2-digit group number and "
                               "4-digit ID number.  \nUsing SubID = %s" % (file_name, self.ID))
 
-            self.key = sub_components
         else:  # The subject info isn't divided as expected
             raise e.BadFileNameError("File of unexpected format: %s\nCheck underscores." % file_name)
 

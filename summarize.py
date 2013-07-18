@@ -3,6 +3,22 @@ A set of functions that take the output of the read_file functions
 and return a dictionary of summary statistics.
 """
 
+def mean(x):
+    """
+    A roll your own function to get the mean of a list of numbers
+    so that we don't have to use Numpy.  This ignores missing values, so
+    mean([1,2,3,None]) = 6/3 = 2
+    :param x:
+    :return:
+    """
+
+    new_array = [i for i in x if i is not None]
+    n_entries = len(new_array)
+    if n_entries > 0:
+        average = sum([float(i) for i in new_array])/n_entries
+    else:
+        average = None
+    return average
 
 def get1(task_dict_list):
     """
@@ -28,14 +44,14 @@ def get1(task_dict_list):
 
     # Again, since there should be equal number of trials contributing
     # to avg_first and average_last, avg_total could be computed by
-    # just doing np.mean([avg_first, avg_last]), but it's safer this way
-    avg_total = np.mean(bad_touches)
-    avg_first = np.mean(bad_touches[:mid_point])
-    avg_last = np.mean(bad_touches[mid_point:])
+    # just doing mean([avg_first, avg_last]), but it's safer this way
+    avg_total = mean(bad_touches)
+    avg_first = mean(bad_touches[:mid_point])
+    avg_last = mean(bad_touches[mid_point:])
 
-    score_first = np.mean([score for score in scores[:mid_point] if score])
-    score_last = np.mean([score for score in scores[mid_point:] if score])
-    score_total = np.mean([score for score in scores if score])
+    score_first = mean([score for score in scores[:mid_point] if score])
+    score_last = mean([score for score in scores[mid_point:] if score])
+    score_total = mean([score for score in scores if score])
 
     return {'T1_BadTouchesAllTrials': avg_total, 'T1_BadTouchesFirst': avg_first, 'T1_BadTouchesLast': avg_last,
             'T1_ScoreFirst': score_first, 'T1_ScoreLast': score_last, 'T1_ScoreAllTrials': score_total}
@@ -88,19 +104,19 @@ def get2(task_dict_list):
     # data are not included in these calculations.                #
     ###############################################################
 
-    switch_rule_accuracy = np.mean([x['Correct'] for x in switch_rule_trials if x['Correct'] is not None])
-    non_switch_rule_accuracy = np.mean([x['Correct'] for x in non_switch_rule_trials if x['Correct'] is not None])
-    switch_side_accuracy = np.mean([x['Correct'] for x in switch_side_trials if x['Correct'] is not None])
-    non_switch_side_accuracy = np.mean([x['Correct'] for x in non_switch_side_trials if x['Correct'] is not None])
-    same_accuracy = np.mean([x['Correct'] for x in same_trials if x['Correct'] is not None])
-    opposite_accuracy = np.mean([x['Correct'] for x in opposite_trials if x['Correct'] is not None])
+    switch_rule_accuracy = mean([x['Correct'] for x in switch_rule_trials])
+    non_switch_rule_accuracy = mean([x['Correct'] for x in non_switch_rule_trials])
+    switch_side_accuracy = mean([x['Correct'] for x in switch_side_trials])
+    non_switch_side_accuracy = mean([x['Correct'] for x in non_switch_side_trials])
+    same_accuracy = mean([x['Correct'] for x in same_trials])
+    opposite_accuracy = mean([x['Correct'] for x in opposite_trials])
 
-    switch_rule_rt = np.mean([x['ReactionTime'] for x in switch_rule_trials if x['ReactionTime'] is not None])
-    non_switch_rule_rt = np.mean([x['ReactionTime'] for x in non_switch_rule_trials if x['ReactionTime'] is not None])
-    switch_side_rt = np.mean([x['ReactionTime'] for x in switch_side_trials if x['ReactionTime'] is not None])
-    non_switch_side_rt = np.mean([x['ReactionTime'] for x in non_switch_side_trials if x['ReactionTime'] is not None])
-    same_rt = np.mean([x['ReactionTime'] for x in same_trials if x['ReactionTime'] is not None])
-    opposite_rt = np.mean([x['ReactionTime'] for x in opposite_trials if x['ReactionTime'] is not None])
+    switch_rule_rt = mean([x['ReactionTime'] for x in switch_rule_trials])
+    non_switch_rule_rt = mean([x['ReactionTime'] for x in non_switch_rule_trials])
+    switch_side_rt = mean([x['ReactionTime'] for x in switch_side_trials])
+    non_switch_side_rt = mean([x['ReactionTime'] for x in non_switch_side_trials])
+    same_rt = mean([x['ReactionTime'] for x in same_trials])
+    opposite_rt = mean([x['ReactionTime'] for x in opposite_trials])
 
     return {'T2_SwitchRuleAvgAccuracy': switch_rule_accuracy, 'T2_NonSwitchRuleAvgAccuracy': non_switch_rule_accuracy,
             'T2_SwitchSideAvgAccuracy': switch_side_accuracy, 'T2_NonSwitchSideAvgAccuracy': non_switch_side_accuracy,
@@ -153,17 +169,16 @@ def get3(task_dict_list):
     # Calculate average accuracy by load, determined by the length of the list
     acc_by_load = {}
     for i in range(1, 4):
-        load_means = [np.mean([dot[0] for dot in trial if dot[0]])
-                      for trial in trials if len(trial) == i]
+        load_means = [mean([dot[0] for dot in trial if dot[0]]) for trial in trials if len(trial) == i]
 
-        acc_by_load[i] = np.mean([x for x in load_means if not np.isnan(x)])
+        acc_by_load[i] = mean([x for x in load_means if x is not None])
 
     acc_by_delay = {}
     for delay in [0.1, 3]:
-        delay_means = [np.mean([dot[0] for dot in trial if dot[0] is not None])
+        delay_means = [mean([dot[0] for dot in trial if dot[0] is not None])
                        for trial in trials if trial[0][1] == delay]
 
-        acc_by_delay[delay] = np.mean([x for x in delay_means if not np.isnan(x)])
+        acc_by_delay[delay] = mean([x for x in delay_means if not x is not None])
 
     return {'T3_Load1Distance': acc_by_load[1], 'T3_Load2Distance': acc_by_load[2], 'T3_Load3Distance': acc_by_load[3],
             'T3_Delay0.1Distance': acc_by_delay[0.1], 'T3_Delay3Distance': acc_by_delay[3]}
@@ -201,8 +216,8 @@ def get4(task_dict_list):
     rand_blocks = (1, 4)
     rule_blocks = (2, 3, 5)
 
-    random_mean = np.mean([block['AvgResponseTime'] for block in task_dict_list if block['Block'] in rand_blocks])
-    rule_mean = np.mean([block['AvgResponseTime'] for block in task_dict_list if block['Block'] in rule_blocks])
+    random_mean = mean([block['AvgResponseTime'] for block in task_dict_list if block['Block'] in rand_blocks])
+    rule_mean = mean([block['AvgResponseTime'] for block in task_dict_list if block['Block'] in rule_blocks])
 
     block4_mean = task_dict_list[3]['AvgResponseTime']
     block5_mean = task_dict_list[4]['AvgResponseTime']
@@ -233,7 +248,7 @@ def get5(task_dict_list):
     """
     import numpy as np
 
-    values = map(np.mean, ([x['NumBadTouches'] for x in task_dict_list], [x['NumRepeats'] for x in task_dict_list],
+    values = map(mean, ([x['NumBadTouches'] for x in task_dict_list], [x['NumRepeats'] for x in task_dict_list],
                            [x['AvgDistancePerTarget'] for x in task_dict_list]))
     return zip(['T5_NumBadTouches', 'T5_NumRepeats', 'T5_AvgDistancePerTarget'], values)
 
@@ -259,14 +274,14 @@ def get6(task_dict_list):
 
     # Again, since there should be equal number of trials contributing
     # to avg_first and average_last, avg_total could be computed by
-    # just doing np.mean([avg_first, avg_last]), but it's safer this way
-    avg_total = np.mean(bad_touches)
-    avg_first = np.mean(bad_touches[:mid_point])
-    avg_last = np.mean(bad_touches[mid_point:])
+    # just doing mean([avg_first, avg_last]), but it's safer this way
+    avg_total = mean(bad_touches)
+    avg_first = mean(bad_touches[:mid_point])
+    avg_last = mean(bad_touches[mid_point:])
 
-    score_first = np.mean([score for score in scores[:mid_point] if score])
-    score_last = np.mean([score for score in scores[mid_point:] if score])
-    score_total = np.mean([score for score in scores if score])
+    score_first = mean([score for score in scores[:mid_point] if score])
+    score_last = mean([score for score in scores[mid_point:] if score])
+    score_total = mean([score for score in scores if score])
 
     return {'T6_BadTouchesAllTrials': avg_total, 'T6_BadTouchesFirst': avg_first, 'T6_BadTouchesLast': avg_last,
             "T6_ScoreFirst": score_first, "T6_ScoreLast": score_last, "T6_ScoreAllTrials": score_total}
