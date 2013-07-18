@@ -9,18 +9,21 @@ class subject:
     log files.
     """
 
-    def __init__(self, ID, group, sibling):
+    def __init__(self, ID, group, sibling, key):
 
         self.ID = ID       # Should be a four digit number
         self.group = group    # Generally a two-digit number
         self.sibling = sibling  # True/False bool
         self.data = {}       # A dictionary to be filled with data_file objects
+        self.key = key
+
 
     def __str__(self):
         """
         String representation of the object
         """
         return '<Subject Number: %s Group: %s Sibling: %s>' % (self.ID, self.group, str(self.sibling))
+
 
     def add_data(self, task, data_object):
 

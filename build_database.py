@@ -77,7 +77,7 @@ for log_file in [os.path.join(log_folder, f) for f in new_files]:
 
         # If the subject associated with the log file is not yet in the subject dictionary, create a new entry
         if log_data.key not in subjects:
-            subjects[log_data.key] = dat.subject(log_data.ID, log_data.group, log_data.sibling)
+            subjects[log_data.key] = dat.subject(log_data.ID, log_data.group, log_data.sibling, log_data.key)
 
         # If there is an existing subject, check to make sure subject data matches (sibling, group)
         else:
@@ -107,9 +107,8 @@ for sub in subjects:
         try:
             db[sub] = subjects[sub]
         except Exception as problem:  # Make sure we close the database no matter what
-            print "An error occurred writing to database:\n%s" % problem
-
-
+            print "An error occurred writing subject %s to database:\n%s" % (sub, problem)
+db.close()
 
 # Iterate over the new dictionary
 for sub in subjects:
