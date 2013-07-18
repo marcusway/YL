@@ -14,10 +14,10 @@ import exception_classes as e
 log_folder        = ""
 summary_file      = ""
 overwrite_summary = False
-overwrite_task    = True
-shelve_database   = ".YL_DATABASE"  # Automatically store the shelve DB in code directory
+overwrite_task    = False
+shelve_database   = "YL_DATABASE"  # Automatically store the shelve DB in code directory
 subjects          = {}
-seen_file_store   = ".PROCESSED_FILES.pck"
+seen_file_store   = "PROCESSED_FILES.pck"
 
 # Load a pickled list of already seen files
 if os.path.isfile(seen_file_store):
