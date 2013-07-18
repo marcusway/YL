@@ -3,6 +3,7 @@ A set of functions that take the output of the read_file functions
 and return a dictionary of summary statistics.
 """
 
+
 def mean(x):
     """
     A roll your own function to get the mean of a list of numbers
@@ -30,7 +31,6 @@ def get1(task_dict_list):
             T1_BadTouchesFirst
 
     """
-    import numpy as np
 
     # Calculate the average number of bad touches per trial
     bad_touches = [x['NumBadTouches'] for x in task_dict_list]
@@ -68,8 +68,6 @@ def get2(task_dict_list):
     and produces a flat dictionary, which will
     be easier to write to the summary file.
     """
-
-    import numpy as np
 
     ###############################################################
     # Organize Trials into separate lists according to trial type #
@@ -148,8 +146,6 @@ def get3(task_dict_list):
 
     """
 
-    import numpy as np
-
     trials = []
     trial_num = None
 
@@ -211,7 +207,7 @@ def get4(task_dict_list):
       'PercentCorrect': 100.0}]
 
     """
-    import numpy as np
+
 
     rand_blocks = (1, 4)
     rule_blocks = (2, 3, 5)
@@ -246,7 +242,7 @@ def get5(task_dict_list):
     'StandardDeviation': 10.20111,
     'Task': 1}
     """
-    import numpy as np
+
 
     values = map(mean, ([x['NumBadTouches'] for x in task_dict_list], [x['NumRepeats'] for x in task_dict_list],
                            [x['AvgDistancePerTarget'] for x in task_dict_list]))
@@ -259,12 +255,10 @@ def get6(task_dict_list):
                            by readTask1LogFile function
 
     """
-    import numpy as np
 
     # Calculate the average number of bad touches per trial
     bad_touches = [x['NumBadTouches'] for x in task_dict_list]
     scores = [x['Score-incorrect only'] for x in task_dict_list]
-
 
     # We should always have 12 trials, and be looking at the first
     # six trials versus the last six trials, but I've added this
