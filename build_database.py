@@ -48,8 +48,10 @@ if os.path.isfile(summary_file):
         w = raw_input("Overwrite existing summary file (y/n): ")
     if w == "y":
         overwrite_summary = True
+        overwrite_task = True
     else:
         overwrite_summary = False
+        overwrite_task = True
 
 # Make a list of files not already seen
 new_files = set(f for f in os.listdir(log_folder)).difference(already_seen)
@@ -124,6 +126,8 @@ for sub in subjects:
 
     for task in subjects[sub].data:
         subjects[sub].dump_trial_by_trial(task, task + '.csv', overwrite=overwrite_task)
+
+    #TODO We're assuming here that the first subject will have task data for all 6 tasks.
     overwrite_task = False
 
 print "\n\nAll Done!\n\n"
