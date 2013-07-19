@@ -17,7 +17,6 @@ class subject:
         self.data = {}       # A dictionary to be filled with data_file objects
         self.key = key
 
-
     def __str__(self):
         """
         String representation of the object
@@ -205,7 +204,7 @@ class data_file:
             self.task = task
 
         # Further split the subject string, which should be something like 'PE211005'
-        sub_components = re.search(r'(\w\ws?)(\d\d)(\d+)', subject, re.IGNORECASE)
+        sub_components = re.search(r'([a-zA-Z][a-zA-Z]s?)(\d\d)(\d+)', subject, re.IGNORECASE)
 
         # This should split the subject data into match.group(1) = 'PE',
         # match.group(2) = '21', and match.group(3) = 1005.  Note that
@@ -217,6 +216,9 @@ class data_file:
         if len(sub_components.groups()) == 3:
 
             # Check if sibling
+            if not sub_components.group(1):
+                raise e.BadFileNameError(
+                    "File name of unexpected format:\n\t%s\n\tExpected two-letter prefix" % file_name)
             if 's' in sub_components.group(1).lower():  # ignoring upper/lower case
                 self.sibling = True
             else:
@@ -231,11 +233,11 @@ class data_file:
             # We expect 6 digits following PE (or PEs).  If there is a different number,
             # warn the user, but don't raise an error.
             if len(self.ID) != 4:
-                warnings.warn("File name of unexpected format: %s  \nExpected a 2-digit group number and "
+                warnings.warn("File name of unexpected format:\n\t %s\n\tExpected a 2-digit group number and "
                               "4-digit ID number.  \nUsing SubID = %s" % (file_name, self.ID))
 
         else:  # The subject info isn't divided as expected
-            raise e.BadFileNameError("File of unexpected format: %s\nCheck underscores." % file_name)
+            raise e.BadFileNameError("File of unexpected format:\n\t%s" % file_name)
 
         # Split the date and time
         split_date = date_and_time.split("-")
@@ -323,7 +325,7 @@ class data_file:
         import parser_functions as sub
 
         self.practice, self.trial_by_trial = sub.read_log_file(self.task, self.log_file, self.task_headers,
-                                                           self.practice_headers)
+                                                               self.practice_headers)
 
     def summarize(self):
 

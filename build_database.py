@@ -19,14 +19,9 @@ shelve_database   = "YL_DATABASE"  # Automatically store the shelve DB in code d
 subjects          = {}
 seen_file_store   = "PROCESSED_FILES.pck"
 
-# Load a pickled list of already seen files
-if os.path.isfile(seen_file_store):
-    with open(seen_file_store, "rb") as f:
-        already_seen = pickle.load(f)
-else:
-    already_seen = set()
+# log_folder = "YL_DATA_PERU"
+# summary_file = "TEST.csv"
 
-print "Number of previously processed log files to date: %d" % len(already_seen)
 # Get User Input
 
 # Prompt the user for the path to their log files folder.
@@ -51,10 +46,23 @@ if os.path.isfile(summary_file):
         overwrite_task = True
     else:
         overwrite_summary = False
-        overwrite_task = True
+        overwrite_task = False
+
+# Load a pickled list of already seen files
+if overwrite_summary is False and os.path.isfile(seen_file_store):
+    with open(seen_file_store, "rb") as f:
+        already_seen = pickle.load(f)
+else:
+    already_seen = set()
 
 # Make a list of files not already seen
 new_files = set(f for f in os.listdir(log_folder)).difference(already_seen)
+
+# Tell the user how many files have already been processed
+if not overwrite_summary:
+    print "Number of previously processed log files to date: %d" % len(already_seen)
+print "Log files to process: %d" % len(new_files)
+
 
 # Iterate over all the files
 for log_file in [os.path.join(log_folder, f) for f in new_files]:
@@ -68,7 +76,7 @@ for log_file in [os.path.join(log_folder, f) for f in new_files]:
         try:
             log_data = dat.data_file(in_file)
         except e.BadFileNameError as bfe:
-            print "Invalid file name format for file: %s\n%s\nSkipping this file.\n" % (in_file.name, bfe)
+            print "Bad file name!\n%s\n" % bfe
             continue
         except e.TaskNameError as tne:
             print "Invalid task name encountered in processing file: %s\n%s\nSkipping this file\n" % (in_file.name, tne)
@@ -101,6 +109,11 @@ try:
     db = shelve.open(shelve_database)
 except IOError as io:
     print "Problem opening database file: %s\nError: %s" % (shelve_database, io)
+    raise
+
+# If we choose to overwrite the summary file, also overwrite the database.
+if overwrite_summary:
+    db.clear()
 
 for sub in subjects:
     # If there is already a record of the subject in the shelve database,
@@ -109,9 +122,9 @@ for sub in subjects:
         print "Pre-existing DATABASE entry for subject %s." % sub
         for task in subjects[sub].data:
             if task not in db[sub].data:
-                update = db[sub]
-                update.add_data(task, subjects[sub].data[task])
-                db[sub] = update
+                updated_sub = db[sub]
+                updated_sub.add_data(task, subjects[sub].data[task])
+                db[sub] = updated_sub
     else:
         db[sub] = subjects[sub]
 db.close()
