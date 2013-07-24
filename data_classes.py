@@ -1,4 +1,39 @@
-# An attempt to use some OOP to solve this problem.
+"""
+The Subject and DataFile classes are defined in this file.  This is
+something of an experiment with object-oriented programming/persistent
+databases in Python.  The idea is to generate an instance of the DataFile
+class for each log file.  Instances of the DataFile class will contain
+information about the log file used to create them, including:
+
+task: one of 'task1', 'task2', ..., 'task6', identifies the task number
+filename: the name of the original log file
+task_headers:  names of relevant data fields
+practice_headers:  names of relevant data fields from practice trials
+sibling:  True/False depending on whether there is an 's' in the file name
+ID:  4-digit ID number
+key: A unique identifier including country prefix, group number, and ID number.
+     Example:  'PEs231010'
+group: a 2-digit group number
+device: A number specific to the device used to administer the tasks, i.e., "IIN005"
+date: The date of task administration (per the file name)
+time: time of administration (per the file name)
+summary: A dictionary containing summary data for the task
+trial_by_trial: A list of dictionaries with data for each trial from the task
+practice: same as trial by trial, but for practice trials
+
+
+
+
+
+        self.log_file = log_file
+        self.filename = os.path.basename(log_file.name)
+        self.parse_file_name(self.filename)
+        self.set_task_headers()
+        self.set_practice_headers()
+        self.parse_file_data()
+        self.summarize()
+        del self.log_file
+"""
 import exception_classes as e
 
 
@@ -14,23 +49,22 @@ class Subject:
         self.ID = ID       # Should be a four digit number
         self.group = group    # Generally a two-digit number
         self.sibling = sibling  # True/False bool
-        self.data = {}       # A dictionary to be filled with data_file objects
+        self.data = {}       # A dictionary to be filled with DataFile objects
         self.key = key
 
     def __str__(self):
         """
-        String representation of the object
+        Returns a string representation of the object
         """
         return '<Subject Number: %s Group: %s Sibling: %s>' % (self.ID, self.group, str(self.sibling))
-
 
     def add_data(self, task, data_object):
 
         """
         Updates the subject object's data
         dictionary
-        :param task_number: A string, one of 'task1', 'task2', ..., 'task6'.
-        :param data_object: An instance of the data_file class
+        :param task: A string, one of 'task1', 'task2', ..., 'task6'.
+        :param data_object: An instance of the DataFile class
         :return: None
         """
         if task not in ['task1', 'task2', 'task3', 'task4', 'task5', 'task6']:
