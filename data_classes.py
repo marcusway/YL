@@ -2,7 +2,7 @@
 import exception_classes as e
 
 
-class subject:
+class Subject:
     """
     A class containing all data (including trial by trial and summary statistics)
     and metadata (subject ID, device number, sibling, time) from the output task
@@ -36,7 +36,7 @@ class subject:
         if task not in ['task1', 'task2', 'task3', 'task4', 'task5', 'task6']:
             raise e.TaskNameError(task)
 
-        elif isinstance(data_object, data_file):
+        elif isinstance(data_object, DataFile):
             self.data[task] = data_object
         else:
             raise TypeError(data_object)
@@ -119,7 +119,7 @@ class subject:
         return full_summary
 
 
-class data_file:
+class DataFile:
     """
     A class, each instance of which is built from
     a log file

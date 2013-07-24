@@ -1,31 +1,72 @@
 """
 A script to iterate over log files, add them to database, and
-then write the summary data to a file.
+then write the summary data to a file. Example usage:
+
+>$ python build_database.py
+Please type the path to your log files folder: YL_DATA_PERU
+Please enter the path to your summary data spreadsheet:summary.csv
+Overwrite existing summary file (y/n): y
+Log files to process: 1237
+
+
+All Done!
+
+
+
+The log folder specified should contain the .csv log files output
+from the YL tablet games and ideally only those files.  All files
+in the log files folder will be considered as log files, but if a file's
+name doesn't fit the log file naming convention, the program will report this
+to the user, and that file will be skipped. Responses to the prompt should
+be typed without quotes. Path to the log file folder should include the name of
+the log folder itself, not just the path to the directory that contains it.  The
+same goes for the path to the summary file (actually specify the name of the summary
+file, not just to the path to the directory containing it).  Paths should be specified
+as either absolute paths or paths relative to the current working directory.  Don't use
+'~' to specify a home directory.
+
+In addition to writing to the
+comma-separated summary file specified by the user (summary.csv above), this script
+also automatically saves 6 task-specific files, each of which contains all trial data
+from all subjects for its respective task, to the working directory (the same one in
+which this script resides).  In addition, subject data are saved to a shelve database,
+which contains all info about the subject.
+
+When the overwrite option is chosen, the summary file, all the task files, and the
+shelve database are overwritten as well.  Before choosing to overwrite, you should ensure
+that you have access to all of the log files that have been processed previously (except, of course,
+those that you don't want to keep), or the information in those files will be lost.
+
+If a single subject has multiple log files for the same task, a warning will be printed to the
+screen, and the second such log file encountered by the program will be the one that is used.
+In such cases, the user should manually inspect the files to determine which one should be kept.  The
+file that is not kept should then be removed from the log files directory and this script should be re-run
+in overwrite mode.
+
 """
 
 import os
 import shelve
 import cPickle as pickle
+
 import data_classes as dat
 import exception_classes as e
 
 # Initialize default values
 
-log_folder        = ""
-summary_file      = ""
-overwrite_summary = False
-overwrite_task    = False
-shelve_database   = "YL_DATABASE"  # Automatically store the shelve DB in code directory
-subjects          = {}
-seen_file_store   = "PROCESSED_FILES.pck"
-
-# log_folder = "YL_DATA_PERU"
-# summary_file = "TEST.csv"
+log_folder = ""
+summary_file = ""
+overwrite_summary = True
+overwrite_task = True
+shelve_database = "YL_DATABASE"  # Automatically store the shelve DB in current directory
+subjects = {}  # This will store subject data to be added to shelve DB
+seen_file_store = "PROCESSED_FILES.pck"  # To keep track of files already processed
 
 # Get User Input
 
 # Prompt the user for the path to their log files folder.
-# The user will be continually prompted until they give a real folder.
+# The user will be continually prompted until they give a path to
+# an existing folder.
 while not os.path.isdir(log_folder):
     log_folder = raw_input("Please type the path to your log files folder: ")
 
@@ -74,7 +115,7 @@ for log_file in [os.path.join(log_folder, f) for f in new_files]:
         # any of the anticipated errors occur, alert the user to the error and
         # skip the file.
         try:
-            log_data = dat.data_file(in_file)
+            log_data = dat.DataFile(in_file)
         except e.BadFileNameError as bfe:
             print "Bad file name!\n%s\n" % bfe
             continue
@@ -82,12 +123,13 @@ for log_file in [os.path.join(log_folder, f) for f in new_files]:
             print "Invalid task name encountered in processing file: %s\n%s\nSkipping this file\n" % (in_file.name, tne)
             continue
         except e.BadLineError as ble:
-            print "Line of unexpected format encountered in log file: %s\n%s\nSkipping this file\n" % (in_file.name, ble)
+            print "Line of unexpected format encountered in log file: %s\n%s\nSkipping this file\n" % (
+                in_file.name, ble)
             continue
 
         # If the subject associated with the log file is not yet in the subject dictionary, create a new entry
         if log_data.key not in subjects:
-            subjects[log_data.key] = dat.subject(log_data.ID, log_data.group, log_data.sibling, log_data.key)
+            subjects[log_data.key] = dat.Subject(log_data.ID, log_data.group, log_data.sibling, log_data.key)
 
         # If there is an existing subject, check to make sure subject data matches (sibling, group)
         else:
