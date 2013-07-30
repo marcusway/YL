@@ -179,7 +179,7 @@ def get3(task_dict_list):
         delay_means = [mean([dot[0] for dot in trial if dot[0] is not None])
                        for trial in trials if trial[0][1] == delay]
 
-        acc_by_delay[delay] = mean([x for x in delay_means if not x is not None])
+        acc_by_delay[delay] = mean([x for x in delay_means if x is not None])
 
     return {'T3_Load1Distance': acc_by_load[1], 'T3_Load2Distance': acc_by_load[2], 'T3_Load3Distance': acc_by_load[3],
             'T3_Delay0.1Distance': acc_by_delay[0.1], 'T3_Delay3Distance': acc_by_delay[3]}

@@ -21,18 +21,7 @@ summary: A dictionary containing summary data for the task
 trial_by_trial: A list of dictionaries with data for each trial from the task
 practice: same as trial by trial, but for practice trials
 
-
-
-
-
-        self.log_file = log_file
-        self.filename = os.path.basename(log_file.name)
-        self.parse_file_name(self.filename)
-        self.set_task_headers()
-        self.set_practice_headers()
-        self.parse_file_data()
-        self.summarize()
-        del self.log_file
+The Subject class contains all task information for a given subject. 
 """
 import exception_classes as e
 
