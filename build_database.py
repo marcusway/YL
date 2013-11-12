@@ -108,26 +108,30 @@ print "Log files to process: %d" % len(new_files)
 # Iterate over all the files
 for log_file in [os.path.join(log_folder, f) for f in new_files]:
 
+    try:
     # Check if the current subject number is in our dictionary
-    with open(log_file, "rU") as in_file:
+        with open(log_file, "rU") as in_file:
 
-        # Try to generate a data_file instance from the given log file.  If
-        # any of the anticipated errors occur, alert the user to the error and
-        # skip the file.
-        try:
-            log_data = dat.DataFile(in_file)
-        except e.BadFileNameError as bfe:
-            print "Bad file name!\n%s\n" % bfe
-            continue
-        except e.TaskNameError as tne:
-            print "Invalid task name encountered in processing file: %s\n%s\nSkipping this file\n" % (in_file.name, tne)
-            continue
-        except e.BadLineError as ble:
-            print "Line of unexpected format encountered in log file: %s\n%s\nSkipping this file\n" % (
-                in_file.name, ble)
-            continue
+            # Try to generate a data_file instance from the given log file.  If
+            # any of the anticipated errors occur, alert the user to the error and
+            # skip the file.
+            try:
+                log_data = dat.DataFile(in_file)
+            except Exception as e:
+                print "Problem with file %s:\n%s" % (in_file.name, e)
+                raise
+            # e.BadFileNameError as bfe:
+            #     print "Bad file name!\n%s\n" % bfe
+            #     continue
+            # except e.TaskNameError as tne:
+            #     print "Invalid task name encountered in processing file: %s\n%s\nSkipping this file\n" % (in_file.name, tne)
+            #     continue
+            # except e.BadLineError as ble:
+            #     print "Line of unexpected format encountered in log file: %s\n%s\nSkipping this file\n" % (
+            #         in_file.name, ble)
+            #     continue
 
-        # If the subject associated with the log file is not yet in the subject dictionary, create a new entry
+            # If the subject associated with the log file is not yet in the subject dictionary, create a new entry
         if log_data.key not in subjects:
             subjects[log_data.key] = dat.Subject(log_data.ID, log_data.group, log_data.sibling, log_data.key)
 
@@ -141,6 +145,9 @@ for log_file in [os.path.join(log_folder, f) for f in new_files]:
         # Update the corresponding subject's data dictionary with the data from the log file object
         subjects[log_data.key].add_data(log_data.task, log_data)
         already_seen.add(os.path.basename(log_file))
+    except Exception as e:
+        print "Problem with file: %s\nError Below:\n%s" % (in_file.name, e)
+        print "Skipping for now..."
 
 # Update the set of already seen files.
 with open(seen_file_store, "wb") as f:
